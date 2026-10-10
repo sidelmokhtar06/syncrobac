@@ -86,31 +86,11 @@ export default function App() {
 function Shell() {
   const s = useSettings()
   const { t } = useT()
-  useNow() // re-render every second so the watcher below catches up after the phone sleeps
   const loc = useLocation()
   const mainRef = useRef<HTMLElement>(null)
-  const completing = useRef(false)
   const [celebrate, setCelebrate] = useState(false)
   const closeCelebrate = useCallback(() => setCelebrate(false), [])
-
-  // Global timer watcher: completes the session whichever tab is open.
-  // The 1s tick catches up after the phone wakes; the exact timeout fires on time when possible.
-  const [, bump] = useState(0)
-  useEffect(() => {
-    if (!s.timer.endsAt) return
-    const id = setTimeout(() => bump((x) => x + 1), Math.max(0, s.timer.endsAt - Date.now()) + 50)
-    return () => clearTimeout(id)
-  }, [s.timer.endsAt])
-  useEffect(() => {
-    if (!s.timer.endsAt || s.timer.endsAt > Date.now() || completing.current) return
-    completing.current = true
-    complete(s)
-      .then((focus) => {
-        notify(focus ? t('sessionDone') : t('breakDone'), focus ? t('sessionDoneSub') : t('breakDoneSub'))
-        if (focus) setCelebrate(true)
-      })
-      .finally(() => (completing.current = false))
-  })
+  const openCelebrate = useCallback(() => setCelebrate(true), [])
 
   // Direction-aware page slide (mirrored in RTL): across tabs by tab order, within a tab by depth.
   const idx = tabOf(loc.pathname)
@@ -125,7 +105,7 @@ function Shell() {
 
   return (
     <div className="mx-auto flex h-full max-w-md flex-col">
-      <main ref={mainRef} className="flex-1 overflow-x-hidden overflow-y-auto px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-28">
+      <m.main ref={mainRef} layoutScroll className="flex-1 overflow-x-hidden overflow-y-auto px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-28">
         <AnimatePresence mode="wait" initial={false} custom={dir}>
           <m.div
             key={loc.pathname}
@@ -164,9 +144,10 @@ function Shell() {
             </ScrollContainer>
           </m.div>
         </AnimatePresence>
-      </main>
+      </m.main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
+      {/* Opaque + own GPU layer: no backdrop blur repainting over scrolling content on Android. */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 transform-gpu border-t border-line bg-bg pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-md px-1">
           {TABS.map(({ to, key, Icon }, i) => {
             const isActive = i === idx
@@ -185,7 +166,38 @@ function Shell() {
         </div>
       </nav>
 
+      <TimerWatcher onFocusDone={openCelebrate} />
       <Celebration open={celebrate} onClose={closeCelebrate} />
     </div>
   )
+}
+
+// Completes the running session whichever page is open. Isolated in its own component
+// so its 1-second tick re-renders only this (renders nothing), not the whole app.
+function TimerWatcher({ onFocusDone }: { onFocusDone: () => void }) {
+  const s = useSettings()
+  const { t } = useT()
+  const now = useNow()
+  const completing = useRef(false)
+
+  // The exact timeout fires on time when the browser allows; the 1s tick catches up after sleep.
+  const [, bump] = useState(0)
+  useEffect(() => {
+    if (!s.timer.endsAt) return
+    const id = setTimeout(() => bump((x) => x + 1), Math.max(0, s.timer.endsAt - Date.now()) + 50)
+    return () => clearTimeout(id)
+  }, [s.timer.endsAt])
+
+  useEffect(() => {
+    if (!s.timer.endsAt || s.timer.endsAt > Date.now() || completing.current) return
+    completing.current = true
+    complete(s)
+      .then((focus) => {
+        notify(focus ? t('sessionDone') : t('breakDone'), focus ? t('sessionDoneSub') : t('breakDoneSub'))
+        if (focus) onFocusDone()
+      })
+      .finally(() => (completing.current = false))
+  }, [now, s, t, onFocusDone])
+
+  return null
 }

@@ -26,11 +26,10 @@ const QUOTES = {
 export default function Focus() {
   const s = useSettings()
   const { t, lang } = useT()
-  const now = useNow(250)
   const streak = useStreak()
   const sessions = useTodaySessions()
   const running = s.timer.endsAt !== null
-  const left = remaining(s.timer, now)
+  const left = remaining(s.timer, Date.now()) // for labels only; the face ticks on its own
   const total = s.durations[s.timer.mode] * 60_000
   const [qi, setQi] = useState(() => Math.floor(Date.now() / 86_400_000) % QUOTES.fr.length)
   const quote = QUOTES[lang][qi]
@@ -49,8 +48,6 @@ export default function Focus() {
   }, [])
 
   const sound = (v: Settings['sound'], node: ReactNode) => ({ value: v, label: t(v), icon: node })
-  const r = 116
-  const c = 2 * Math.PI * r
 
   return (
     <Stagger className="flex flex-col gap-6">
@@ -93,18 +90,8 @@ export default function Focus() {
       </Item>
 
       <Item className="relative mx-auto size-64">
-        <svg viewBox="0 0 256 256" className="size-full">
-          <circle cx="128" cy="128" r={r} stroke="#1a1f28" strokeWidth="8" fill="none" />
-          <m.circle
-            cx="128" cy="128" r={r} fill="none" stroke="#22C1D6" strokeWidth="8" strokeLinecap="round"
-            strokeDasharray={c} transform="rotate(-90 128 128)"
-            initial={{ strokeDashoffset: c }}
-            animate={{ strokeDashoffset: c * (1 - left / total) }}
-            transition={{ duration: running ? 0.3 : 0.9, ease: running ? 'linear' : EASE }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="tnum text-6xl font-medium tracking-tight" dir="ltr">{fmt(left)}</span>
+        <TimerFace s={s} total={total} />
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-end pb-20">
           <AnimatePresence mode="wait">
             <m.span key={s.timer.mode + running} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="mt-1 text-sm text-ink-2">
               {running ? t('sessionRunning') : t(s.timer.mode)}
@@ -217,5 +204,31 @@ function CustomMinutes({ s }: { s: Settings }) {
         {v} {t('minutes')}
       </span>
     </label>
+  )
+}
+
+// Ring + digits: the only part that ticks (4×/s), so the rest of the page stays still.
+function TimerFace({ s, total }: { s: Settings; total: number }) {
+  const now = useNow(250)
+  const running = s.timer.endsAt !== null
+  const left = remaining(s.timer, now)
+  const r = 116
+  const c = 2 * Math.PI * r
+  return (
+    <>
+      <svg viewBox="0 0 256 256" className="size-full">
+        <circle cx="128" cy="128" r={r} stroke="#1a1f28" strokeWidth="8" fill="none" />
+        <m.circle
+          cx="128" cy="128" r={r} fill="none" stroke="#22C1D6" strokeWidth="8" strokeLinecap="round"
+          strokeDasharray={c} transform="rotate(-90 128 128)"
+          initial={{ strokeDashoffset: c }}
+          animate={{ strokeDashoffset: c * (1 - left / total) }}
+          transition={{ duration: running ? 0.3 : 0.9, ease: running ? 'linear' : EASE }}
+        />
+      </svg>
+      <span className="tnum absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-6xl font-medium tracking-tight" dir="ltr">
+        {fmt(left)}
+      </span>
+    </>
   )
 }

@@ -37,6 +37,7 @@ export function useInstall() {
     installed,
     canPrompt: !!deferred,
     iosManual: ios() && !installed, // iOS has no prompt: show "Share → Add to Home Screen"
+    ios: ios(),
     prompt: async () => {
       if (!deferred) return false
       await deferred.prompt()

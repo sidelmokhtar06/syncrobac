@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { AnimatePresence, m, useScroll, useTransform } from 'motion/react'
-import { ArrowLeft, ArrowRight, BookOpen, Check, Download, ListTodo, Play, RotateCcw, Share, Snowflake, Sparkles, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Check, Download, ListTodo, Play, RotateCcw, Snowflake, Sparkles, X } from 'lucide-react'
 import { LogoMark, Wordmark } from '../components/Logo'
 import { Mascot } from '../components/Mascot'
+import { InstallSheet } from '../components/InstallSheet'
 import { FlameIcon } from '../components/icons/flame'
 import { GraduationCapIcon } from '../components/icons/graduation-cap'
 import { Burst, CountUp, EASE, Item, Rolling, Stagger, spring } from '../components/motion'
@@ -17,6 +18,9 @@ import { fmt, remaining, start, useNow } from '../lib/timer'
 import { useInstall } from '../lib/pwa'
 import { useScrollContainer } from '../lib/scroll'
 
+// Must match <main>'s padding-top in App.tsx.
+const TOP_PAD = 'max(0.75rem, env(safe-area-inset-top))'
+
 const KIND: Record<Mission['kind'], { key: TKey; Icon: typeof Play }> = {
   start: { key: 'kindStart', Icon: BookOpen },
   review: { key: 'kindReview', Icon: RotateCcw },
@@ -28,7 +32,6 @@ export default function Dashboard() {
   const s = useSettings()
   const { t, lang } = useT()
   const nav = useNavigate()
-  const now = useNow()
   const streak = useStreakInfo()
   const today = useToday()
   const all = useAllChapters(s)
@@ -38,26 +41,24 @@ export default function Dashboard() {
 
   // Header turns into a frosted bar once the page scrolls.
   const { scrollY } = useScroll({ container: useScrollContainer() })
-  const barBg = useTransform(scrollY, [0, 48], ['rgba(10,13,18,0)', 'rgba(10,13,18,0.85)'])
+  const barBg = useTransform(scrollY, [0, 48], ['rgba(10,13,18,0)', 'rgba(10,13,18,1)'])
   const barBorder = useTransform(scrollY, [0, 48], ['rgba(35,42,53,0)', 'rgba(35,42,53,1)'])
 
   useEffect(() => {
     if (all.size) ensureMissions(s, all)
   }, [all, s])
 
-  const bac = new Date(s.bacDate).getTime()
-  const left = Math.max(0, bac - now)
-  const days = Math.floor(left / 86_400_000)
-  const hms = new Date(left).toISOString().slice(11, 19)
   // The SyncroBac idea in one card: where the official pacing says you should be vs where you are.
   const expected = expectedShare(s)
   const mastery = weightedMastery(s, all, states)
   const gap = mastery - expected
   const syncState = gap >= 0.05 ? 'ahead' : gap <= -0.05 ? 'behind' : 'inSync'
-  const showInstall = !install.installed && (install.canPrompt || install.iosManual) && !s.dismissed.includes('install')
+  const showInstall = !install.installed && !s.dismissed.includes('install')
+  const [howTo, setHowTo] = useState(false)
 
   const subjects = new Map(subjectsFor(s).map((x) => [x.id, x]))
   const running = s.timer.endsAt !== null
+  const now = Date.now()
   const hour = new Date(now).getHours()
   const greet = hour < 17 ? t('greetMorning') : t('greetEvening')
   const Arrow = lang === 'ar' ? ArrowLeft : ArrowRight
@@ -66,9 +67,10 @@ export default function Dashboard() {
 
   return (
     <Stagger className="flex flex-col gap-6">
+      {/* Sticky bar spans <main>'s top padding (safe area included) so nothing peeks above it. */}
       <m.div
-        style={{ backgroundColor: barBg, borderColor: barBorder }}
-        className="sticky top-0 z-30 -mx-5 -mt-3 flex h-14 items-center justify-between border-b px-5 backdrop-blur-xl"
+        style={{ backgroundColor: barBg, borderColor: barBorder, top: `calc(-1 * ${TOP_PAD})`, marginTop: `calc(-1 * ${TOP_PAD})`, paddingTop: TOP_PAD }}
+        className="sticky z-30 -mx-5 flex items-center justify-between border-b px-5 pb-2"
       >
         <div className="flex items-center gap-2">
           <LogoMark animated className="h-7 w-auto" />
@@ -97,15 +99,7 @@ export default function Dashboard() {
           </span>
           <Chip tone={syncState === 'behind' ? 'warning' : 'success'}>{t(syncState)}</Chip>
         </div>
-        <div className="mt-3 flex items-end justify-between gap-4">
-          <p className="flex items-baseline gap-2">
-            <span className="text-5xl font-semibold tracking-tight">
-              <CountUp to={days} />
-            </span>
-            <span className="text-lg text-ink-2">{t('days')}</span>
-          </p>
-          <Rolling text={hms} className="pb-1.5 text-base text-ink-2" />
-        </div>
+        <Countdown bacDate={s.bacDate} daysLabel={t('days')} />
         <div className="mt-5 flex flex-col gap-3">
           <SyncBar label={t('timeElapsed')} value={expected} tone="bg-ink-3" />
           <SyncBar label={t('programmeCovered')} value={mastery} tone="bg-accent" delay={0.25} />
@@ -122,13 +116,9 @@ export default function Dashboard() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{t('installTitle')}</p>
-              <p className="text-xs text-ink-2">{install.iosManual ? t('iosInstall') : t('installSub')}</p>
+              <p className="text-xs text-ink-2">{t('installSub')}</p>
             </div>
-            {install.canPrompt ? (
-              <Button onClick={install.prompt}>{t('install')}</Button>
-            ) : (
-              <Share size={18} className="shrink-0 text-ink-3" />
-            )}
+            <Button onClick={() => (install.canPrompt ? install.prompt() : setHowTo(true))}>{t('installBtn')}</Button>
             <button onClick={() => updateSettings({ dismissed: [...s.dismissed, 'install'] })} aria-label={t('dismiss')} className="-me-2 grid size-11 shrink-0 place-items-center text-ink-3">
               <X size={18} />
             </button>
@@ -144,7 +134,7 @@ export default function Dashboard() {
               <Play size={16} fill="currentColor" />
             </span>
             <span className="flex-1 text-sm text-ink-2">{t('sessionRunning')}</span>
-            <span className="tnum text-xl font-semibold" dir="ltr">{fmt(remaining(s.timer, now))}</span>
+            <RunningTime />
             <Arrow size={18} className="text-ink-3" />
           </Link>
         </Item>
@@ -216,6 +206,7 @@ export default function Dashboard() {
           </div>
         </div>
       </Item>
+      <InstallSheet open={howTo} onClose={() => setHowTo(false)} ios={install.ios} />
     </Stagger>
   )
 }
@@ -274,5 +265,32 @@ function SyncBar({ label, value, tone, delay = 0 }: { label: string; value: numb
         />
       </span>
     </div>
+  )
+}
+
+// Ticking parts live in their own components so only they re-render every second.
+function Countdown({ bacDate, daysLabel }: { bacDate: string; daysLabel: string }) {
+  const now = useNow()
+  const left = Math.max(0, new Date(bacDate).getTime() - now)
+  return (
+    <div className="mt-3 flex items-end justify-between gap-4">
+      <p className="flex items-baseline gap-2">
+        <span className="text-5xl font-semibold tracking-tight">
+          <CountUp to={Math.floor(left / 86_400_000)} />
+        </span>
+        <span className="text-lg text-ink-2">{daysLabel}</span>
+      </p>
+      <Rolling text={new Date(left).toISOString().slice(11, 19)} className="pb-1.5 text-base text-ink-2" />
+    </div>
+  )
+}
+
+function RunningTime() {
+  const s = useSettings()
+  const now = useNow()
+  return (
+    <span className="tnum text-xl font-semibold" dir="ltr">
+      {fmt(remaining(s.timer, now))}
+    </span>
   )
 }

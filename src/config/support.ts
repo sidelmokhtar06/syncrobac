@@ -2,11 +2,11 @@
 // empty number is hidden. Nothing here is sent anywhere: the student copies the number
 // and pays from their own wallet app.
 export const SUPPORT = {
-  name: 'Sidi El Moctar', // shown as the account holder
+  name: '', // account holder name shown under the number (optional)
   wallets: [
-    { id: 'bankily', name: 'Bankily', number: '' },
-    { id: 'masrvi', name: 'Masrvi', number: '' },
-    { id: 'sedad', name: 'Sedad', number: '' },
+    { id: 'bankily', name: 'Bankily', number: '37 36 06 96' },
+    { id: 'masrvi', name: 'Masrvi', number: '37 36 06 96' },
+    { id: 'sedad', name: 'Sedad', number: '37 36 06 96' },
   ],
 }
 

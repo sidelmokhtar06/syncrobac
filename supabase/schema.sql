@@ -1,4 +1,4 @@
--- SyncroBac content schema. Run once in Supabase → SQL Editor, then run seed.sql.
+-- SyncroBac content schema (safe to re-run). Usually you run supabase/setup.sql, which includes this + the seed.
 -- Everyone can READ published content; only users listed in `admins` can WRITE.
 -- Edit content in Supabase → Table Editor (spreadsheet-like). See docs/ADMIN.md.
 
@@ -78,16 +78,21 @@ alter table chapters enable row level security;
 alter table resources enable row level security;
 alter table app_config enable row level security;
 
+drop policy if exists "admins read self" on admins;
 create policy "admins read self" on admins for select using (user_id = auth.uid());
 
 do $$
 declare t text;
 begin
   foreach t in array array['series', 'subjects', 'serie_subjects', 'chapters', 'app_config'] loop
+    execute format('drop policy if exists "public read" on %I', t);
+    execute format('drop policy if exists "admin write" on %I', t);
     execute format('create policy "public read" on %I for select using (true)', t);
     execute format('create policy "admin write" on %I for all using (is_admin()) with check (is_admin())', t);
   end loop;
 end $$;
 
+drop policy if exists "public read published" on resources;
+drop policy if exists "admin write" on resources;
 create policy "public read published" on resources for select using (published or is_admin());
 create policy "admin write" on resources for all using (is_admin()) with check (is_admin());

@@ -122,7 +122,8 @@ export function PageHeader({ title, subtitle, action, back }: { title: string; s
         </IconButton>
       )}
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-2xl">{title}</h1>
+        {/* Taller line box: `truncate` clips overflow, which would cut Arabic dots below the baseline. */}
+        <h1 className="truncate pb-0.5 text-2xl leading-[1.45]">{title}</h1>
         {subtitle && <p className="mt-0.5 text-sm text-ink-2">{subtitle}</p>}
       </div>
       {action}

@@ -84,7 +84,7 @@ export default function Coffee() {
                   <p className="tnum text-lg font-semibold tracking-wide" dir="ltr">
                     {w.number}
                   </p>
-                  <p className="truncate text-xs text-ink-3">{SUPPORT.name}</p>
+                  {SUPPORT.name && <p className="truncate text-xs text-ink-3">{SUPPORT.name}</p>}
                 </div>
                 <m.button
                   whileTap={{ scale: 0.9 }}

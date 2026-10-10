@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/*
+  SyncroBac design tokens — see DESIGN.md.
+  Neutral graphite surfaces + ONE brand accent. Status colors only for status.
+  All text colors pass WCAG AA on bg/surface (ink-3 only on bg/surface, never on raised).
+*/
+@theme {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-black: #000;
+  --color-white: #fff;
+
+  --color-bg: #0a0d12;          /* app background */
+  --color-surface: #12161d;     /* cards */
+  --color-raised: #1a1f28;      /* inputs, segmented tracks, hover */
+  --color-line: #232a35;        /* hairlines */
+  --color-line-strong: #2f3745; /* control borders */
+
+  --color-ink: #e8ecf1;         /* primary text   15:1 */
+  --color-ink-2: #a3adbb;       /* secondary text  8:1 */
+  --color-ink-3: #788293;       /* tertiary text 4.7:1 */
+
+  --color-accent: #22c1d6;      /* brand: actions, selection, progress */
+  --color-accent-ink: #061a1f;  /* text on accent 8:1 */
+  --color-success: #3ccb8c;
+  --color-warning: #f0a645;     /* streak flame, at-risk states */
+  --color-danger: #f26464;
+
+  --font-sans: "Readex Pro Variable", system-ui, "Noto Sans Arabic", sans-serif;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Arabic: taller lines for dots/ascenders, never letter-spacing (breaks joining). */
+:lang(ar) body { line-height: 1.75; }
+:lang(ar) [class*="tracking-"] { letter-spacing: 0 !important; }
+
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; }
+:lang(ar) :is(h1, h2, h3) { line-height: 1.5; }
+
+.tnum { font-variant-numeric: tabular-nums; }
+button, a, select, input { -webkit-user-select: none; user-select: none; }
+input[type="text"], input[type="number"], input[type="date"] { user-select: text; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 12px; }
+/* Text fields already show focus with an accent border — no second ring. */
+:is(input, textarea, select):focus-visible { outline: none; }
+select, input[type="date"] { color-scheme: dark; }
+
+@utility card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+}

@@ -23,7 +23,20 @@ last version they downloaded, and the bundled copy is always there as a fallback
    ```
    Redeploy. The anon key is safe to ship: security rules only allow reading.
 
-## Everyday edits (Table Editor — like a spreadsheet)
+## Everyday edits: the admin page
+
+Open **https://syncrobac.vercel.app/admin** (not linked anywhere in the app) and sign in with
+the Supabase user from step 3. Four tabs:
+
+- **Ressources**: add / edit / hide / delete recommended links, optionally for one série.
+- **Matières**: per série, change coefficients, programme status (officiel / provisoire /
+  générique), order, add an existing or new subject, remove one.
+- **Chapitres**: per série + subject, rename (FR/AR), set official weeks, reorder, add, delete.
+- **Général**: BAC date (applies to every student who hasn't set their own), content version.
+
+Every save is published immediately (content version is bumped automatically).
+
+## Advanced: Table Editor (like a spreadsheet)
 
 | I want to… | Table | How |
 |---|---|---|
@@ -36,8 +49,8 @@ last version they downloaded, and the bundled copy is always there as a fallback
 | Change the BAC date | `app_config` | Row `bac_date`, value like `"2027-07-02T08:00:00Z"` (with quotes). |
 | Add a série | `series` then `serie_subjects` + `chapters` | Set `active = false` to hide one. |
 
-After a batch of edits, bump `app_config.content_version` (e.g. 1 → 2) so apps
-replace their cached copy right away.
+When editing in the Table Editor directly, bump `app_config.content_version` afterwards
+(e.g. 1 → 2) so apps replace their cached copy right away. The admin page does this for you.
 
 ## Safety
 
@@ -48,5 +61,4 @@ replace their cached copy right away.
 
 ## Later
 
-A built-in `/admin` page (login + forms) can replace the Table Editor, plus moderation
-of resources submitted by students.
+Moderation queue for resources submitted by students (needs student accounts).

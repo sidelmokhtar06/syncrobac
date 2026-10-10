@@ -14,7 +14,7 @@ import { useAllChapters } from '../lib/curriculum'
 import { subjectsFor, updateSettings, useSettings, type Settings, type TimerMode } from '../lib/db'
 import { useStreak, useTodaySessions } from '../lib/hooks'
 import { quoted, useT } from '../lib/i18n'
-import { playAmbient, stopAmbient } from '../lib/ambient'
+import { AVAILABLE_SOUNDS, playAmbient, stopAmbient } from '../lib/ambient'
 import { shareStatusCard } from '../lib/statusCard'
 import { fmt, pause, remaining, setMode, start, useNow } from '../lib/timer'
 
@@ -163,7 +163,7 @@ export default function Focus() {
                 sound('rain', <Anim icon={CloudRainIcon} size={16} play={s.sound === 'rain'} />),
                 sound('atay', <Anim icon={CoffeeIcon} size={16} play={s.sound === 'atay'} />),
                 sound('lofi', <Music size={16} />),
-              ]}
+              ].filter((o) => (AVAILABLE_SOUNDS as readonly string[]).includes(o.value))}
             />
           </div>
         </div>

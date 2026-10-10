@@ -18,6 +18,7 @@ export interface Settings {
   dailyGoal: number // Pomodoros per day
   weeklyGoal: number // active days per week (gentle streak)
   name: string
+  dismissed: string[] // one-time cards the student closed (e.g. 'install')
   extensions: Record<string, boolean>
 }
 
@@ -129,6 +130,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dailyGoal: 4,
   weeklyGoal: 5,
   name: '',
+  dismissed: [],
   extensions: {},
 }
 

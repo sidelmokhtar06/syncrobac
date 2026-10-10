@@ -1,8 +1,9 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { Download, Trash2, Upload } from 'lucide-react'
+import { BellRing, Download, Trash2, Upload } from 'lucide-react'
+import { enableNotifications, notifyPermission, notifySupported } from '../lib/pwa'
 import { LanguagesIcon } from '../components/icons/languages'
 import { Item, Stagger } from '../components/motion'
-import { Anim, Button, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
+import { Anim, Button, Chip, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
 import { SERIES, getSerie } from '../config/bac'
 import { cn } from '../lib/cn'
 import { db, today, updateSettings, useSettings, type Lang } from '../lib/db'
@@ -13,6 +14,7 @@ export default function Settings() {
   const { t, lang } = useT()
   const [name, setName] = useState(s.name)
   const [msg, setMsg] = useState('')
+  const [perm, setPerm] = useState(notifyPermission())
   const file = useRef<HTMLInputElement>(null)
   const serie = getSerie(s.serie!)
 
@@ -99,6 +101,28 @@ export default function Settings() {
               ))}
             </Select>
           </Row>
+          {notifySupported() && (
+            <Row label={t('notifications')}>
+              {perm === 'granted' ? (
+                <Chip tone="success">
+                  <BellRing size={13} />
+                  {t('notifOn')}
+                </Chip>
+              ) : perm === 'denied' ? (
+                <span className="max-w-44 text-end text-xs text-ink-3">{t('notifDenied')}</span>
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={async () => {
+                    await enableNotifications()
+                    setPerm(notifyPermission())
+                  }}
+                >
+                  {t('activate')}
+                </Button>
+              )}
+            </Row>
+          )}
           <Row label={t('bacDate')}>
             <input
               type="date"

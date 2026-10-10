@@ -87,6 +87,29 @@ export const startOfWeek = (d: Date) => {
 // Official progressions run October → May (~32 teaching weeks).
 const TEACHING_WEEKS = 32
 
+/** Share of the programme the class should have covered by now (official pacing, Oct → May). */
+export const expectedShare = (s: Settings, now = new Date()) =>
+  Math.min(1, Math.max(0, (now.getTime() - schoolYearStart(s.bacDate).getTime()) / WEEK / TEACHING_WEEKS))
+
+/** Chapters the class has (at least) started by now according to the official pacing. */
+export function seenByPacing(chapters: Chapter[], share: number) {
+  const total = chapters.reduce((a, c) => a + c.weeks, 0)
+  let cum = 0
+  const seen = new Set<string>()
+  for (const c of chapters) {
+    if (cum < share * total) seen.add(c.id)
+    cum += c.weeks
+  }
+  return seen
+}
+
+/** Coefficient-weighted mastery across all subjects (0..1). */
+export function weightedMastery(s: Settings, all: Map<string, Chapter[]>, states: Map<string, ChapterState>) {
+  const subjects = subjectsFor(s)
+  const total = subjects.reduce((a, x) => a + x.coeff, 0) || 1
+  return subjects.reduce((a, x) => a + x.coeff * subjectMastery(all.get(x.id) ?? [], states, x.id), 0) / total
+}
+
 // ── Revision plan ───────────────────────────────────────────────────────
 
 export interface PlanWeek {

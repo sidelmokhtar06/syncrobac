@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router'
 import { LazyMotion, MotionConfig } from 'motion/react'
 import '@fontsource-variable/readex-pro'
 import './index.css'
+import './lib/pwa' // capture the install prompt before any page mounts
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(

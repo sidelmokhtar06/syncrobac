@@ -10,6 +10,8 @@ import { Anim } from './components/ui'
 import { SettingsContext, useSettings, useSettingsQuery } from './lib/db'
 import { useT, type TKey } from './lib/i18n'
 import { complete, useNow } from './lib/timer'
+import { notify } from './lib/pwa'
+import { ScrollContainer } from './lib/scroll'
 import { Celebration } from './components/Celebration'
 import { EASE, spring } from './components/motion'
 import Onboarding from './pages/Onboarding'
@@ -84,7 +86,7 @@ export default function App() {
 function Shell() {
   const s = useSettings()
   const { t } = useT()
-  const now = useNow()
+  useNow() // re-render every second so the watcher below catches up after the phone sleeps
   const loc = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   const completing = useRef(false)
@@ -92,13 +94,23 @@ function Shell() {
   const closeCelebrate = useCallback(() => setCelebrate(false), [])
 
   // Global timer watcher: completes the session whichever tab is open.
+  // The 1s tick catches up after the phone wakes; the exact timeout fires on time when possible.
+  const [, bump] = useState(0)
   useEffect(() => {
-    if (!s.timer.endsAt || s.timer.endsAt > now || completing.current) return
+    if (!s.timer.endsAt) return
+    const id = setTimeout(() => bump((x) => x + 1), Math.max(0, s.timer.endsAt - Date.now()) + 50)
+    return () => clearTimeout(id)
+  }, [s.timer.endsAt])
+  useEffect(() => {
+    if (!s.timer.endsAt || s.timer.endsAt > Date.now() || completing.current) return
     completing.current = true
     complete(s)
-      .then((focus) => focus && setCelebrate(true))
+      .then((focus) => {
+        notify(focus ? t('sessionDone') : t('breakDone'), focus ? t('sessionDoneSub') : t('breakDoneSub'))
+        if (focus) setCelebrate(true)
+      })
       .finally(() => (completing.current = false))
-  }, [now, s])
+  })
 
   // Direction-aware page slide (mirrored in RTL): across tabs by tab order, within a tab by depth.
   const idx = tabOf(loc.pathname)
@@ -128,26 +140,28 @@ function Shell() {
             exit="exit"
             transition={{ duration: 0.22, ease: EASE }}
           >
-            <Suspense fallback={null}>
-              <Routes location={loc}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/plan" element={<Plan />} />
-                <Route path="/subjects" element={<Subjects />} />
-                <Route path="/subjects/:subjectId" element={<SubjectDetail />} />
-                <Route path="/subjects/:subjectId/:chapterId" element={<ChapterDetail />} />
-                <Route path="/focus" element={<Focus />} />
-                <Route path="/focus/history" element={<History />} />
-                <Route path="/resources" element={<Resources />} />
-                <Route path="/me" element={<Me />} />
-                <Route path="/progress" element={<Progress />} />
-                <Route path="/simulator" element={<SimulatorPage />} />
-                <Route path="/settings" element={<Settings />} />
-                {/* Old URLs from earlier versions */}
-                <Route path="/checklist" element={<Navigate to="/subjects" replace />} />
-                <Route path="/profile" element={<Navigate to="/me" replace />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
+            <ScrollContainer value={mainRef}>
+              <Suspense fallback={null}>
+                <Routes location={loc}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/plan" element={<Plan />} />
+                  <Route path="/subjects" element={<Subjects />} />
+                  <Route path="/subjects/:subjectId" element={<SubjectDetail />} />
+                  <Route path="/subjects/:subjectId/:chapterId" element={<ChapterDetail />} />
+                  <Route path="/focus" element={<Focus />} />
+                  <Route path="/focus/history" element={<History />} />
+                  <Route path="/resources" element={<Resources />} />
+                  <Route path="/me" element={<Me />} />
+                  <Route path="/progress" element={<Progress />} />
+                  <Route path="/simulator" element={<SimulatorPage />} />
+                  <Route path="/settings" element={<Settings />} />
+                  {/* Old URLs from earlier versions */}
+                  <Route path="/checklist" element={<Navigate to="/subjects" replace />} />
+                  <Route path="/profile" element={<Navigate to="/me" replace />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </ScrollContainer>
           </m.div>
         </AnimatePresence>
       </main>

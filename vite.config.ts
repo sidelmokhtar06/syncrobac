@@ -29,9 +29,10 @@ export default defineConfig({
         // Fonts: only the Arabic + Latin subsets the app actually uses.
         globPatterns: ['**/*.{js,css,html,svg,png}', 'assets/readex-pro-{arabic,latin}-wght-*.woff2'],
         navigateFallback: '/index.html',
+        importScripts: ['sw-notify.js'],
         runtimeCaching: [
           // Ambient loops: cache on first play, then fully offline.
-          { urlPattern: /\/sounds\/.*\.mp3$/, handler: 'CacheFirst', options: { cacheName: 'sounds', rangeRequests: true } },
+          { urlPattern: /\.mp3$/, handler: 'CacheFirst', options: { cacheName: 'sounds', rangeRequests: true } },
         ],
       },
     }),

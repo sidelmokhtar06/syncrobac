@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { AnimatePresence, m } from 'motion/react'
-import { ArrowLeft, ArrowRight, BookOpen, Check, ListTodo, Play, RotateCcw, Snowflake, Sparkles } from 'lucide-react'
+import { AnimatePresence, m, useScroll, useTransform } from 'motion/react'
+import { ArrowLeft, ArrowRight, BookOpen, Check, Download, ListTodo, Play, RotateCcw, Share, Snowflake, Sparkles, X } from 'lucide-react'
+import { LogoMark, Wordmark } from '../components/Logo'
+import { Mascot } from '../components/Mascot'
 import { FlameIcon } from '../components/icons/flame'
 import { GraduationCapIcon } from '../components/icons/graduation-cap'
-import { Burst, EASE, Item, Rolling, Stagger, spring } from '../components/motion'
-import { Anim, Chip, PageHeader, ProgressBar, SectionTitle } from '../components/ui'
+import { Burst, CountUp, EASE, Item, Rolling, Stagger, spring } from '../components/motion'
+import { Anim, Button, Chip, SectionTitle } from '../components/ui'
 import { cn } from '../lib/cn'
-import { ensureMissions, toggleMission, useAllChapters, useMissions } from '../lib/curriculum'
-import { subjectsFor, useSettings, type Mission } from '../lib/db'
+import { ensureMissions, expectedShare, toggleMission, useAllChapters, useChapterStates, useMissions, weightedMastery } from '../lib/curriculum'
+import { subjectsFor, updateSettings, useSettings, type Mission } from '../lib/db'
 import { dateLocale, useStreakInfo, useToday } from '../lib/hooks'
 import { useT, type TKey } from '../lib/i18n'
 import { fmt, remaining, start, useNow } from '../lib/timer'
+import { useInstall } from '../lib/pwa'
+import { useScrollContainer } from '../lib/scroll'
 
 const KIND: Record<Mission['kind'], { key: TKey; Icon: typeof Play }> = {
   start: { key: 'kindStart', Icon: BookOpen },
@@ -29,6 +33,13 @@ export default function Dashboard() {
   const today = useToday()
   const all = useAllChapters(s)
   const missions = useMissions()
+  const states = useChapterStates()
+  const install = useInstall()
+
+  // Header turns into a frosted bar once the page scrolls.
+  const { scrollY } = useScroll({ container: useScrollContainer() })
+  const barBg = useTransform(scrollY, [0, 48], ['rgba(10,13,18,0)', 'rgba(10,13,18,0.85)'])
+  const barBorder = useTransform(scrollY, [0, 48], ['rgba(35,42,53,0)', 'rgba(35,42,53,1)'])
 
   useEffect(() => {
     if (all.size) ensureMissions(s, all)
@@ -38,8 +49,12 @@ export default function Dashboard() {
   const left = Math.max(0, bac - now)
   const days = Math.floor(left / 86_400_000)
   const hms = new Date(left).toISOString().slice(11, 19)
-  const yearStart = new Date(new Date(s.bacDate).getFullYear() - 1, 9, 1).getTime()
-  const elapsed = Math.min(1, Math.max(0, (now - yearStart) / (bac - yearStart)))
+  // The SyncroBac idea in one card: where the official pacing says you should be vs where you are.
+  const expected = expectedShare(s)
+  const mastery = weightedMastery(s, all, states)
+  const gap = mastery - expected
+  const syncState = gap >= 0.05 ? 'ahead' : gap <= -0.05 ? 'behind' : 'inSync'
+  const showInstall = !install.installed && (install.canPrompt || install.iosManual) && !s.dismissed.includes('install')
 
   const subjects = new Map(subjectsFor(s).map((x) => [x.id, x]))
   const running = s.timer.endsAt !== null
@@ -51,40 +66,75 @@ export default function Dashboard() {
 
   return (
     <Stagger className="flex flex-col gap-6">
-      <Item>
-        <PageHeader
-          title={s.name ? `${greet}${lang === 'ar' ? '،' : ','} ${s.name}` : greet}
-          subtitle={new Date(now).toLocaleDateString(dateLocale(lang), { weekday: 'long', day: 'numeric', month: 'long' })}
-          action={
-            <Link to="/progress" aria-label={t('progress')}>
-              <Chip tone={streak.current ? 'warning' : 'neutral'} className="h-9 px-3 text-sm">
-                <Anim icon={FlameIcon} size={18} autoplay play={streak.current} />
-                <span className="tnum">{streak.current}</span>
-              </Chip>
-            </Link>
-          }
-        />
+      <m.div
+        style={{ backgroundColor: barBg, borderColor: barBorder }}
+        className="sticky top-0 z-30 -mx-5 -mt-3 flex h-14 items-center justify-between border-b px-5 backdrop-blur-xl"
+      >
+        <div className="flex items-center gap-2">
+          <LogoMark animated className="h-7 w-auto" />
+          <Wordmark animated delay={0.4} className="text-base" />
+        </div>
+        <Link to="/progress" aria-label={t('progress')}>
+          <Chip tone={streak.current ? 'warning' : 'neutral'} className="h-9 px-3 text-sm">
+            <Anim icon={FlameIcon} size={18} autoplay play={streak.current} />
+            <span className="tnum">{streak.current}</span>
+          </Chip>
+        </Link>
+      </m.div>
+
+      <Item className="-mt-2">
+        <h1 className="text-2xl">{s.name ? `${greet}${lang === 'ar' ? '،' : ','} ${s.name}` : greet}</h1>
+        <p className="mt-0.5 text-sm text-ink-2">{new Date(now).toLocaleDateString(dateLocale(lang), { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </Item>
 
       <Item className="card p-5">
-        <div className="flex items-center gap-2 text-sm text-ink-2">
-          <span className="grid size-8 place-items-center rounded-lg bg-accent/12 text-accent">
-            <Anim icon={GraduationCapIcon} size={18} autoplay />
+        <div className="flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2 text-sm text-ink-2">
+            <span className="grid size-8 place-items-center rounded-lg bg-accent/12 text-accent">
+              <Anim icon={GraduationCapIcon} size={18} autoplay />
+            </span>
+            {t('bacIn')}
           </span>
-          {t('bacIn')}
+          <Chip tone={syncState === 'behind' ? 'warning' : 'success'}>{t(syncState)}</Chip>
         </div>
         <div className="mt-3 flex items-end justify-between gap-4">
           <p className="flex items-baseline gap-2">
-            <span className="tnum text-5xl font-semibold tracking-tight">{days}</span>
+            <span className="text-5xl font-semibold tracking-tight">
+              <CountUp to={days} />
+            </span>
             <span className="text-lg text-ink-2">{t('days')}</span>
           </p>
           <Rolling text={hms} className="pb-1.5 text-base text-ink-2" />
         </div>
-        <ProgressBar value={elapsed} className="mt-5" />
-        <p className="mt-2 text-xs text-ink-3">
-          <span className="tnum">{Math.round(elapsed * 100)}%</span> {t('yearElapsed')}
-        </p>
+        <div className="mt-5 flex flex-col gap-3">
+          <SyncBar label={t('timeElapsed')} value={expected} tone="bg-ink-3" />
+          <SyncBar label={t('programmeCovered')} value={mastery} tone="bg-accent" delay={0.25} />
+        </div>
       </Item>
+
+      <AnimatePresence>
+        {showInstall && (
+          <m.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: -24 }} transition={{ duration: 0.35, ease: EASE }} className="card flex items-center gap-3 p-4">
+            <span className="relative grid size-11 shrink-0 place-items-center rounded-xl bg-accent/12 text-accent">
+              <m.span animate={{ y: [0, 3, 0] }} transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}>
+                <Download size={20} />
+              </m.span>
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{t('installTitle')}</p>
+              <p className="text-xs text-ink-2">{install.iosManual ? t('iosInstall') : t('installSub')}</p>
+            </div>
+            {install.canPrompt ? (
+              <Button onClick={install.prompt}>{t('install')}</Button>
+            ) : (
+              <Share size={18} className="shrink-0 text-ink-3" />
+            )}
+            <button onClick={() => updateSettings({ dismissed: [...s.dismissed, 'install'] })} aria-label={t('dismiss')} className="-me-2 grid size-11 shrink-0 place-items-center text-ink-3">
+              <X size={18} />
+            </button>
+          </m.div>
+        )}
+      </AnimatePresence>
 
       {running && (
         <Item>
@@ -124,9 +174,13 @@ export default function Dashboard() {
           ))}
           <AnimatePresence>
             {items.length > 0 && doneCount === items.length && (
-              <m.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="px-4 py-3 text-sm text-success">
-                {t('allDone')}
-              </m.p>
+              <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.4, ease: EASE }} className="flex items-center gap-3 overflow-hidden px-4 py-3">
+                <span className="relative shrink-0">
+                  <Mascot size={56} cheer />
+                  <Burst fire={1} count={10} radius={44} />
+                </span>
+                <p className="text-sm text-success">{t('allDone')}</p>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -200,6 +254,25 @@ function MissionRow({ mission, subjectName, chapterName, onToggle, onStart, to }
           <Play size={16} fill="currentColor" />
         </m.button>
       )}
+    </div>
+  )
+}
+
+function SyncBar({ label, value, tone, delay = 0 }: { label: string; value: number; tone: string; delay?: number }) {
+  return (
+    <div>
+      <div className="mb-1.5 flex justify-between text-xs">
+        <span className="text-ink-2">{label}</span>
+        <span className="tnum font-medium text-ink">{Math.round(value * 100)}%</span>
+      </div>
+      <span className="block h-1.5 overflow-hidden rounded-full bg-raised">
+        <m.span
+          className={cn('block h-full rounded-full', tone)}
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.round(value * 100)}%` }}
+          transition={{ delay: 0.3 + delay, duration: 1, ease: EASE }}
+        />
+      </span>
     </div>
   )
 }

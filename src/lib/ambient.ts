@@ -1,7 +1,12 @@
 import type { Settings } from './db'
 
-// Rain is synthesized (zero bytes downloaded). Atay and Lo-Fi play small local
-// loops from /public/sounds — drop atay.mp3 / lofi.mp3 there (~300KB each).
+// Rain is synthesized (zero bytes downloaded). Atay and Lo-Fi are small loops:
+// drop atay.mp3 / lofi.mp3 (~300KB each) into src/assets/sounds/ — their buttons
+// appear automatically at build time; until then they stay hidden.
+const FILES = import.meta.glob<string>('../assets/sounds/*.mp3', { eager: true, query: '?url', import: 'default' })
+const fileFor = (name: string) => FILES[`../assets/sounds/${name}.mp3`]
+
+export const AVAILABLE_SOUNDS = (['none', 'rain', 'atay', 'lofi'] as const).filter((x) => x === 'none' || x === 'rain' || !!fileFor(x))
 
 let ctx: AudioContext | null = null
 let noise: AudioBufferSourceNode | null = null
@@ -37,7 +42,9 @@ export function playAmbient(sound: Settings['sound']) {
     noise.start()
     return
   }
-  audio = new Audio(`/sounds/${sound}.mp3`)
+  const url = fileFor(sound)
+  if (!url) return
+  audio = new Audio(url)
   audio.loop = true
   audio.play().catch(() => {})
 }

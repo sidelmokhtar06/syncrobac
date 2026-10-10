@@ -23,7 +23,10 @@ window.addEventListener('appinstalled', () => {
   emit()
 })
 
-const standalone = () => matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true
+// Chrome/Edge's newer Web Install API (origin trial in 2026): one tap → the browser's own install dialog.
+const nav = navigator as Navigator & { install?: () => Promise<unknown>; standalone?: boolean }
+
+const standalone = () => matchMedia('(display-mode: standalone)').matches || nav.standalone === true
 const ios = () => /iphone|ipad|ipod/i.test(navigator.userAgent)
 
 export function useInstall() {
@@ -35,10 +38,19 @@ export function useInstall() {
   const installed = standalone()
   return {
     installed,
-    canPrompt: !!deferred,
+    // Browsers never allow silent installs; this is the most direct path they offer (1 tap + confirm).
+    canPrompt: !!deferred || typeof nav.install === 'function',
     iosManual: ios() && !installed, // iOS has no prompt: show "Share → Add to Home Screen"
     ios: ios(),
     prompt: async () => {
+      if (!deferred && nav.install) {
+        try {
+          await nav.install()
+          return true
+        } catch {
+          return false
+        }
+      }
       if (!deferred) return false
       await deferred.prompt()
       const { outcome } = await deferred.userChoice

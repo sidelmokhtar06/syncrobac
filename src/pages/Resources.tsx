@@ -5,9 +5,9 @@ import { ExternalLink, Plus, Share2, Trash2, Users } from 'lucide-react'
 import { BookTextIcon } from '../components/icons/book-text'
 import { EASE, Item, Stagger } from '../components/motion'
 import { Anim, Button, Chip, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
-import { SUGGESTED_LINKS } from '../config/links'
+import { suggestedLinks } from '../config/links'
 import { cn } from '../lib/cn'
-import { db, type SavedLink } from '../lib/db'
+import { db, useSettings, type SavedLink } from '../lib/db'
 import { useT, type TKey } from '../lib/i18n'
 
 type Cat = 'all' | SavedLink['category']
@@ -27,6 +27,7 @@ const domain = (url: string) => {
 }
 
 export default function Resources() {
+  const s = useSettings()
   const { t, lang } = useT()
   const [cat, setCat] = useState<Cat>('all')
   const [adding, setAdding] = useState(false)
@@ -34,7 +35,7 @@ export default function Resources() {
 
   const items = [
     ...mine.map((l) => ({ ...l, mine: true, desc: l.note })),
-    ...SUGGESTED_LINKS.map((l) => ({ ...l, id: undefined, mine: false, desc: l[lang] })),
+    ...suggestedLinks(s.serie).map((l) => ({ ...l, id: undefined, mine: false, desc: l[lang] })),
   ].filter((l) => cat === 'all' || l.category === cat)
 
   return (

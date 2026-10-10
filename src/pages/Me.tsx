@@ -4,6 +4,7 @@ import { InstallSheet } from '../components/InstallSheet'
 import { useInstall } from '../lib/pwa'
 import { BotIcon } from '../components/icons/bot'
 import { CalendarCheckIcon } from '../components/icons/calendar-check'
+import { CoffeeIcon } from '../components/icons/coffee'
 import { ChartColumnIncreasingIcon } from '../components/icons/chart-column-increasing'
 import { FlameIcon } from '../components/icons/flame'
 import { GaugeIcon } from '../components/icons/gauge'
@@ -58,6 +59,21 @@ export default function Me() {
           <Anim icon={FlameIcon} size={18} autoplay />
           <span className="tnum">{streak.current}</span>
         </Chip>
+      </Item>
+
+      <Item>
+        <Link to="/coffee" className="card relative flex items-center gap-4 overflow-hidden p-4 transition-colors active:bg-raised">
+          <span aria-hidden className="absolute inset-y-0 start-0 w-1/2 bg-gradient-to-r from-warning/10 to-transparent rtl:bg-gradient-to-l" />
+          <span className="relative grid size-12 shrink-0 place-items-center rounded-xl bg-warning/12 text-warning">
+            <Anim icon={CoffeeIcon} size={24} autoplay />
+          </span>
+          <span className="relative min-w-0 flex-1">
+            <span className="block font-semibold">
+              <bdi lang="ar">اشري للمطور كافه</bdi>
+            </span>
+            <span className="block truncate text-sm text-ink-2">{t('coffeeRow')}</span>
+          </span>
+        </Link>
       </Item>
 
       <Item>

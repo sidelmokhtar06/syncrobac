@@ -11,6 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
+        id: '/',
         name: 'SyncroBac',
         short_name: 'SyncroBac',
         description: 'Synchro ta révision. Domine le BAC.',
@@ -19,6 +20,14 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
+        lang: 'fr',
+        categories: ['education', 'productivity'],
+        // Screenshots make Android show the rich install sheet instead of a tiny dialog.
+        screenshots: [
+          { src: 'screenshots/home.png', sizes: '780x1688', type: 'image/png', form_factor: 'narrow', label: 'Accueil' },
+          { src: 'screenshots/subjects.png', sizes: '780x1688', type: 'image/png', form_factor: 'narrow', label: 'Matières' },
+          { src: 'screenshots/focus.png', sizes: '780x1688', type: 'image/png', form_factor: 'narrow', label: 'Focus' },
+        ],
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },

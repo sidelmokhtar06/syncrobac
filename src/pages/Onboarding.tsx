@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, m } from 'motion/react'
 import { ArrowLeft, ArrowRight, Bell, BellRing, Check, ChevronDown, Download, Share } from 'lucide-react'
-import { SERIES, getSerie, type SerieId } from '../config/bac'
+import { getSerie, listSeries, type SerieId } from '../config/bac'
 import { LogoMark, Wordmark } from '../components/Logo'
 import { LogoHero } from '../components/LogoHero'
 import { LanguagesIcon } from '../components/icons/languages'
@@ -64,7 +64,9 @@ export default function Onboarding() {
   if (finishing) return <Syncing serieLabel={serie ? `${t('serie')} ${serie}` : ''} />
 
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+    // The document never scrolls (see index.css), so onboarding scrolls inside its own container.
+    <div className="h-full overflow-y-auto overscroll-contain">
+    <div className="mx-auto flex min-h-full max-w-md flex-col px-5 pt-[max(1rem,env(safe-area-inset-top))]">
       <div className="flex h-12 items-center justify-between">
         {step > 0 ? (
           <IconButton label={t('back')} onClick={() => go(-1)}>
@@ -142,7 +144,7 @@ export default function Onboarding() {
             {current === 'serie' && (
               <Step title={t('chooseSerie')} sub={t('chooseSerieSub')}>
                 <div role="radiogroup" className="flex flex-col gap-3">
-                  {SERIES.map((x, i) => {
+                  {listSeries().map((x, i) => {
                     const on = serie === x.id
                     return (
                       <m.button
@@ -242,12 +244,14 @@ export default function Onboarding() {
         </AnimatePresence>
       </div>
 
-      <div className="mt-6">
+      {/* Sticky so long steps (catch-up) never hide the button. */}
+      <div className="sticky bottom-0 mt-6 bg-gradient-to-t from-bg from-70% to-transparent pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <Button size="lg" block disabled={!canNext} onClick={() => (step < STEPS.length - 1 ? go(1) : finish())}>
           {current === 'name' && !name.trim() ? t('skip') : step < STEPS.length - 1 ? t('next') : t('letsGo')}
           <Fwd size={20} />
         </Button>
       </div>
+    </div>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router'
 import { AnimatePresence, m } from 'motion/react'
 import { LayoutGridIcon } from './components/icons/layout-grid'
@@ -12,6 +12,7 @@ import { useT, type TKey } from './lib/i18n'
 import { complete, useNow } from './lib/timer'
 import { notify } from './lib/pwa'
 import { ScrollContainer } from './lib/scroll'
+import { content, subscribeContent } from './config/content'
 import { Celebration } from './components/Celebration'
 import { EASE, spring } from './components/motion'
 import Onboarding from './pages/Onboarding'
@@ -29,6 +30,7 @@ const Me = lazy(() => import('./pages/Me'))
 const Progress = lazy(() => import('./pages/Progress'))
 const SimulatorPage = lazy(() => import('./pages/SimulatorPage'))
 const Settings = lazy(() => import('./pages/Settings'))
+const Coffee = lazy(() => import('./pages/Coffee'))
 
 // `owns`: path prefixes that keep the tab highlighted on its sub-pages.
 const TABS = [
@@ -36,7 +38,7 @@ const TABS = [
   { to: '/subjects', key: 'subjects', Icon: CheckCheckIcon, owns: ['/subjects'] },
   { to: '/focus', key: 'focus', Icon: TimerIcon, owns: ['/focus'] },
   { to: '/resources', key: 'resources', Icon: BookTextIcon, owns: ['/resources'] },
-  { to: '/me', key: 'profile', Icon: UserIcon, owns: ['/me', '/progress', '/simulator', '/settings'] },
+  { to: '/me', key: 'profile', Icon: UserIcon, owns: ['/me', '/progress', '/simulator', '/settings', '/coffee'] },
 ] satisfies { to: string; key: TKey; Icon: unknown; owns: string[] }[]
 
 const tabOf = (path: string) => {
@@ -47,6 +49,8 @@ const depthOf = (path: string) => path.split('/').filter(Boolean).length
 
 export default function App() {
   const s = useSettingsQuery()
+  // Re-render everything when fresh admin content arrives from Supabase.
+  useSyncExternalStore(subscribeContent, content)
 
   // Hand off from the HTML splash once data is ready (kept ≥1s so it doesn't flash).
   useEffect(() => {
@@ -135,6 +139,7 @@ function Shell() {
                   <Route path="/progress" element={<Progress />} />
                   <Route path="/simulator" element={<SimulatorPage />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/coffee" element={<Coffee />} />
                   {/* Old URLs from earlier versions */}
                   <Route path="/checklist" element={<Navigate to="/subjects" replace />} />
                   <Route path="/profile" element={<Navigate to="/me" replace />} />

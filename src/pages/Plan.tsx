@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { AlertTriangle, CheckCircle2, GraduationCap } from 'lucide-react'
-import { Item, Stagger } from '../components/motion'
+import { m } from 'motion/react'
+import { EASE, Item, Stagger } from '../components/motion'
 import { Chip, PageHeader } from '../components/ui'
 import { cn } from '../lib/cn'
 import { buildPlan, useAllChapters, useChapterStates } from '../lib/curriculum'
@@ -31,38 +32,43 @@ export default function Plan() {
 
       <ol className="relative flex flex-col gap-3">
         {weeks.map((w, i) => (
-          <Item key={w.start.toISOString()}>
-            <li className={cn('card p-4', i === 0 && 'border-accent/60')}>
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-sm font-medium">
-                  {i === 0 ? t('thisWeek') : `${t('weekOf')} ${fmt(w.start)}`}
-                </p>
-                {i === 0 && <Chip tone="accent">{fmt(w.start)}</Chip>}
-              </div>
-              {w.revision ? (
-                <p className="flex items-center gap-2 text-sm text-ink-2">
-                  <GraduationCap size={16} className="text-accent" />
-                  {t('revisionWeek')}
-                </p>
-              ) : w.items.length === 0 ? (
-                <p className="text-sm text-ink-3">—</p>
-              ) : (
-                <ul className="flex flex-col">
-                  {w.items.map(({ subject, chapter }) => (
-                    <li key={subject.id + chapter.id}>
-                      <Link to={`/subjects/${subject.id}/${chapter.id}`} className="flex min-h-11 items-center gap-3 rounded-lg py-1">
-                        <span className="tnum grid size-8 shrink-0 place-items-center rounded-lg bg-raised text-xs font-semibold text-ink-2">{subject.coeff}</span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm text-ink">{chapter.title[lang]}</span>
-                          <span className="block truncate text-xs text-ink-3">{subject[lang]}</span>
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          </Item>
+          <m.li
+            key={w.start.toISOString()}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+            transition={{ duration: 0.4, ease: EASE }}
+            className={cn('card p-4', i === 0 && 'border-accent/60')}
+          >
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-sm font-medium">
+                {i === 0 ? t('thisWeek') : `${t('weekOf')} ${fmt(w.start)}`}
+              </p>
+              {i === 0 && <Chip tone="accent">{fmt(w.start)}</Chip>}
+            </div>
+            {w.revision ? (
+              <p className="flex items-center gap-2 text-sm text-ink-2">
+                <GraduationCap size={16} className="text-accent" />
+                {t('revisionWeek')}
+              </p>
+            ) : w.items.length === 0 ? (
+              <p className="text-sm text-ink-3">—</p>
+            ) : (
+              <ul className="flex flex-col">
+                {w.items.map(({ subject, chapter }) => (
+                  <li key={subject.id + chapter.id}>
+                    <Link to={`/subjects/${subject.id}/${chapter.id}`} className="flex min-h-11 items-center gap-3 rounded-lg py-1">
+                      <span className="tnum grid size-8 shrink-0 place-items-center rounded-lg bg-raised text-xs font-semibold text-ink-2">{subject.coeff}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm text-ink">{chapter.title[lang]}</span>
+                        <span className="block truncate text-xs text-ink-3">{subject[lang]}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </m.li>
         ))}
       </ol>
     </Stagger>

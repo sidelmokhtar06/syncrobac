@@ -1,0 +1,98 @@
+import defaults from '../content/default-content.json'
+import { assembleBundle, type Row } from './assemble'
+
+// ── The content bundle ──────────────────────────────────────────────────
+// Everything an admin can change without shipping a new app version: séries,
+// subjects + coefficients, chapters, recommended links, BAC date.
+// Source of truth = Supabase tables (see supabase/schema.sql). The bundled JSON
+// is the offline fallback and the seed.
+
+export type Source = 'official' | 'draft' | 'generic'
+
+export interface SubjectDef {
+  id: string
+  fr: string
+  ar: string
+  coeff: number
+}
+
+export interface SerieDef {
+  id: string
+  code: string
+  fr: string
+  ar: string
+  subjects: SubjectDef[]
+}
+
+export interface ChapterDef {
+  id: string
+  fr: string
+  ar: string
+  weeks?: number
+}
+
+export interface SubjectProgramme {
+  source: Source
+  chapters: ChapterDef[]
+}
+
+export interface LinkDef {
+  title: string
+  url: string
+  category: 'group' | 'site' | 'video' | 'app'
+  fr: string
+  ar: string
+  serie?: string | null // only shown to this série when set
+  subject?: string | null
+}
+
+export interface ContentBundle {
+  version: number
+  updatedAt: string
+  bacDate: string
+  series: SerieDef[]
+  programme: Record<string, Record<string, SubjectProgramme>>
+  links: LinkDef[]
+}
+
+export const DEFAULT_CONTENT = defaults as ContentBundle
+
+let current: ContentBundle = DEFAULT_CONTENT
+const listeners = new Set<() => void>()
+
+export const content = () => current
+
+export function setContent(next: ContentBundle) {
+  current = next
+  listeners.forEach((f) => f())
+}
+
+export function subscribeContent(fn: () => void) {
+  listeners.add(fn)
+  return () => void listeners.delete(fn)
+}
+
+// ── Remote (Supabase) ───────────────────────────────────────────────────
+
+const URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
+const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+export const remoteConfigured = !!(URL && KEY)
+
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${URL}/rest/v1/${path}`, { headers: { apikey: KEY!, Authorization: `Bearer ${KEY}` } })
+  if (!res.ok) throw new Error(`${path}: ${res.status}`)
+  return res.json()
+}
+
+/** Fetches the tables and assembles a bundle. Throws if anything looks wrong (we then keep the cache). */
+export async function fetchRemoteContent(): Promise<ContentBundle> {
+  if (!remoteConfigured) throw new Error('Supabase not configured')
+  const [series, serieSubjects, chapters, resources, config] = await Promise.all([
+    get<Row[]>('series?select=*&active=eq.true&order=position'),
+    get<Row[]>('serie_subjects?select=*,subjects(*)&order=position'),
+    get<Row[]>('chapters?select=*&order=position'),
+    get<Row[]>('resources?select=*&published=eq.true&order=position'),
+    get<Row[]>('app_config?select=*'),
+  ])
+  return assembleBundle({ series, serieSubjects, chapters, resources, config }, DEFAULT_CONTENT.bacDate)
+}

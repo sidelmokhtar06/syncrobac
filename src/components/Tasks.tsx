@@ -53,6 +53,7 @@ function TaskRow({ task }: { task: Task }) {
       </m.div>
       <m.div
         drag="x"
+        dragDirectionLock
         dragSnapToOrigin
         dragElastic={0.5}
         style={{ x, touchAction: 'pan-y' }}

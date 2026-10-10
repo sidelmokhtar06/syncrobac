@@ -6,6 +6,11 @@ import '@fontsource-variable/readex-pro'
 import './index.css'
 import './lib/pwa' // capture the install prompt before any page mounts
 import App from './App.tsx'
+import { loadCachedContent, refreshContent } from './lib/contentSync'
+
+// Admin-managed content: cached copy first (instant, offline), then refresh in the background.
+await loadCachedContent()
+refreshContent()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

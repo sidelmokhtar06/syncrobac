@@ -4,7 +4,7 @@ import { enableNotifications, notifyPermission, notifySupported } from '../lib/p
 import { LanguagesIcon } from '../components/icons/languages'
 import { Item, Stagger } from '../components/motion'
 import { Anim, Button, Chip, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
-import { SERIES, getSerie } from '../config/bac'
+import { getSerie, listSeries } from '../config/bac'
 import { cn } from '../lib/cn'
 import { db, today, updateSettings, useSettings, type Lang } from '../lib/db'
 import { useT } from '../lib/i18n'
@@ -70,7 +70,7 @@ export default function Settings() {
           </Row>
           <Row label={t('serie')}>
             <Select aria-label={t('serie')} value={s.serie!} onChange={(e) => updateSettings({ serie: e.target.value as typeof s.serie })} className="w-44">
-              {SERIES.map((x) => (
+              {listSeries().map((x) => (
                 <option key={x.id} value={x.id}>
                   {x.id} · {x[lang]}
                 </option>

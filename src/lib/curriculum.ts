@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { DEFAULT_WEEKS, PROGRAMME, type Source } from '../config/programme'
+import { DEFAULT_WEEKS, programme, type Source } from '../config/programme'
 import type { Subject } from '../config/bac'
 import { db, subjectsFor, today, type ChapterState, type ChapterStatus, type DayMissions, type Lang, type Mission, type Settings, type Task } from './db'
 
@@ -13,7 +13,7 @@ export interface Chapter {
 export const chapterKey = (subjectId: string, chapterId: string) => `${subjectId}/${chapterId}`
 
 export function programmeFor(s: Settings, subjectId: string): { source: Source; chapters: Chapter[] } {
-  const p = s.serie ? PROGRAMME[s.serie][subjectId] : undefined
+  const p = s.serie ? programme()[s.serie]?.[subjectId] : undefined
   return {
     source: p?.source ?? 'generic',
     chapters: (p?.chapters ?? []).map((c) => ({ id: c.id, title: { fr: c.fr, ar: c.ar }, weeks: c.weeks ?? DEFAULT_WEEKS, custom: false })),

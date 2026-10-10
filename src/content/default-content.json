@@ -1,0 +1,1699 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-10T22:16:39.815Z",
+  "bacDate": "2027-07-05T08:00:00Z",
+  "series": [
+    {
+      "id": "C",
+      "code": "M",
+      "fr": "Mathématiques",
+      "ar": "الرياضيات",
+      "subjects": [
+        {
+          "id": "maths",
+          "fr": "Mathématiques",
+          "ar": "الرياضيات",
+          "coeff": 9
+        },
+        {
+          "id": "physics",
+          "fr": "Sciences physiques",
+          "ar": "العلوم الفيزيائية",
+          "coeff": 7
+        },
+        {
+          "id": "natsci",
+          "fr": "Sciences naturelles",
+          "ar": "العلوم الطبيعية",
+          "coeff": 4
+        },
+        {
+          "id": "arabic",
+          "fr": "Arabe",
+          "ar": "اللغة العربية",
+          "coeff": 3
+        },
+        {
+          "id": "french",
+          "fr": "Français",
+          "ar": "اللغة الفرنسية",
+          "coeff": 2
+        },
+        {
+          "id": "english",
+          "fr": "Anglais",
+          "ar": "اللغة الإنجليزية",
+          "coeff": 2
+        },
+        {
+          "id": "philo",
+          "fr": "Philosophie",
+          "ar": "الفلسفة",
+          "coeff": 2
+        },
+        {
+          "id": "islamic",
+          "fr": "Instruction islamique",
+          "ar": "التربية الإسلامية",
+          "coeff": 2
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "code": "SN",
+      "fr": "Sciences naturelles",
+      "ar": "العلوم الطبيعية",
+      "subjects": [
+        {
+          "id": "natsci",
+          "fr": "Sciences naturelles",
+          "ar": "العلوم الطبيعية",
+          "coeff": 9
+        },
+        {
+          "id": "maths",
+          "fr": "Mathématiques",
+          "ar": "الرياضيات",
+          "coeff": 6
+        },
+        {
+          "id": "physics",
+          "fr": "Sciences physiques",
+          "ar": "العلوم الفيزيائية",
+          "coeff": 6
+        },
+        {
+          "id": "arabic",
+          "fr": "Arabe",
+          "ar": "اللغة العربية",
+          "coeff": 3
+        },
+        {
+          "id": "french",
+          "fr": "Français",
+          "ar": "اللغة الفرنسية",
+          "coeff": 2
+        },
+        {
+          "id": "english",
+          "fr": "Anglais",
+          "ar": "اللغة الإنجليزية",
+          "coeff": 2
+        },
+        {
+          "id": "philo",
+          "fr": "Philosophie",
+          "ar": "الفلسفة",
+          "coeff": 2
+        },
+        {
+          "id": "islamic",
+          "fr": "Instruction islamique",
+          "ar": "التربية الإسلامية",
+          "coeff": 2
+        }
+      ]
+    },
+    {
+      "id": "TM",
+      "code": "TM",
+      "fr": "Technique mathématique",
+      "ar": "الرياضيات التقنية",
+      "subjects": [
+        {
+          "id": "maths",
+          "fr": "Mathématiques",
+          "ar": "الرياضيات",
+          "coeff": 7
+        },
+        {
+          "id": "tech",
+          "fr": "Technologie / Génie",
+          "ar": "التكنولوجيا",
+          "coeff": 7
+        },
+        {
+          "id": "physics",
+          "fr": "Sciences physiques",
+          "ar": "العلوم الفيزيائية",
+          "coeff": 5
+        },
+        {
+          "id": "arabic",
+          "fr": "Arabe",
+          "ar": "اللغة العربية",
+          "coeff": 3
+        },
+        {
+          "id": "french",
+          "fr": "Français",
+          "ar": "اللغة الفرنسية",
+          "coeff": 2
+        },
+        {
+          "id": "english",
+          "fr": "Anglais",
+          "ar": "اللغة الإنجليزية",
+          "coeff": 2
+        },
+        {
+          "id": "islamic",
+          "fr": "Instruction islamique",
+          "ar": "التربية الإسلامية",
+          "coeff": 2
+        }
+      ]
+    },
+    {
+      "id": "LM",
+      "code": "LM",
+      "fr": "Lettres modernes",
+      "ar": "الآداب العصرية",
+      "subjects": [
+        {
+          "id": "philo",
+          "fr": "Philosophie",
+          "ar": "الفلسفة",
+          "coeff": 5
+        },
+        {
+          "id": "french",
+          "fr": "Français",
+          "ar": "اللغة الفرنسية",
+          "coeff": 4
+        },
+        {
+          "id": "arabic",
+          "fr": "Arabe",
+          "ar": "اللغة العربية",
+          "coeff": 4
+        },
+        {
+          "id": "histgeo",
+          "fr": "Histoire-Géographie",
+          "ar": "التاريخ والجغرافيا",
+          "coeff": 3
+        },
+        {
+          "id": "english",
+          "fr": "Anglais",
+          "ar": "اللغة الإنجليزية",
+          "coeff": 3
+        },
+        {
+          "id": "maths",
+          "fr": "Mathématiques",
+          "ar": "الرياضيات",
+          "coeff": 2
+        },
+        {
+          "id": "islamic",
+          "fr": "Instruction islamique",
+          "ar": "التربية الإسلامية",
+          "coeff": 2
+        }
+      ]
+    },
+    {
+      "id": "LO",
+      "code": "LO",
+      "fr": "Lettres originales",
+      "ar": "الآداب الأصلية",
+      "subjects": [
+        {
+          "id": "arabic",
+          "fr": "Arabe",
+          "ar": "اللغة العربية",
+          "coeff": 6
+        },
+        {
+          "id": "islamic",
+          "fr": "Sciences islamiques",
+          "ar": "العلوم الشرعية",
+          "coeff": 6
+        },
+        {
+          "id": "philo",
+          "fr": "Philosophie",
+          "ar": "الفلسفة",
+          "coeff": 3
+        },
+        {
+          "id": "histgeo",
+          "fr": "Histoire-Géographie",
+          "ar": "التاريخ والجغرافيا",
+          "coeff": 3
+        },
+        {
+          "id": "french",
+          "fr": "Français",
+          "ar": "اللغة الفرنسية",
+          "coeff": 2
+        },
+        {
+          "id": "english",
+          "fr": "Anglais",
+          "ar": "اللغة الإنجليزية",
+          "coeff": 2
+        }
+      ]
+    }
+  ],
+  "programme": {
+    "C": {
+      "arabic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "textes",
+            "fr": "Étude de textes littéraires",
+            "ar": "دراسة النصوص الأدبية"
+          },
+          {
+            "id": "nahw",
+            "fr": "Grammaire (nahw et sarf)",
+            "ar": "النحو والصرف"
+          },
+          {
+            "id": "balagha",
+            "fr": "Rhétorique (balagha)",
+            "ar": "البلاغة"
+          },
+          {
+            "id": "arud",
+            "fr": "Prosodie (ʿarūḍ)",
+            "ar": "العروض"
+          },
+          {
+            "id": "insha",
+            "fr": "Expression écrite",
+            "ar": "التعبير والإنشاء"
+          }
+        ]
+      },
+      "french": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "resume",
+            "fr": "Résumé / contraction de texte",
+            "ar": "التلخيص"
+          },
+          {
+            "id": "commentaire",
+            "fr": "Commentaire et questions sur texte",
+            "ar": "التعليق وأسئلة النص"
+          },
+          {
+            "id": "dissertation",
+            "fr": "Dissertation / discussion",
+            "ar": "المقالة والمناقشة"
+          },
+          {
+            "id": "oeuvres",
+            "fr": "Œuvres au programme",
+            "ar": "المؤلفات المقررة"
+          },
+          {
+            "id": "langue",
+            "fr": "Grammaire et expression",
+            "ar": "القواعد والتعبير"
+          }
+        ]
+      },
+      "english": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "reading",
+            "fr": "Reading comprehension",
+            "ar": "فهم المقروء"
+          },
+          {
+            "id": "grammar",
+            "fr": "Grammar",
+            "ar": "القواعد"
+          },
+          {
+            "id": "vocabulary",
+            "fr": "Vocabulary",
+            "ar": "المفردات"
+          },
+          {
+            "id": "writing",
+            "fr": "Essay writing",
+            "ar": "كتابة المقال"
+          }
+        ]
+      },
+      "islamic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "aqida",
+            "fr": "Croyance (ʿaqīda)",
+            "ar": "العقيدة"
+          },
+          {
+            "id": "fiqh",
+            "fr": "Jurisprudence (fiqh)",
+            "ar": "الفقه"
+          },
+          {
+            "id": "hadith",
+            "fr": "Hadith",
+            "ar": "الحديث"
+          },
+          {
+            "id": "tafsir",
+            "fr": "Exégèse (tafsīr)",
+            "ar": "التفسير"
+          },
+          {
+            "id": "sira",
+            "fr": "Sīra et éthique",
+            "ar": "السيرة والأخلاق"
+          }
+        ]
+      },
+      "philo": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "methode-dissert",
+            "fr": "Méthode : dissertation",
+            "ar": "المنهجية: المقالة الفلسفية"
+          },
+          {
+            "id": "methode-texte",
+            "fr": "Méthode : analyse de texte",
+            "ar": "المنهجية: تحليل النص"
+          },
+          {
+            "id": "notions",
+            "fr": "Notions du programme",
+            "ar": "مفاهيم البرنامج"
+          },
+          {
+            "id": "auteurs",
+            "fr": "Auteurs et citations",
+            "ar": "الفلاسفة والأقوال"
+          }
+        ]
+      },
+      "maths": {
+        "source": "official",
+        "chapters": [
+          {
+            "id": "matrices",
+            "fr": "Matrices et systèmes linéaires",
+            "ar": "المصفوفات والأنظمة الخطية",
+            "weeks": 1
+          },
+          {
+            "id": "complexes",
+            "fr": "Nombres complexes",
+            "ar": "الأعداد العقدية",
+            "weeks": 4
+          },
+          {
+            "id": "arith",
+            "fr": "Arithmétique",
+            "ar": "الحسابيات",
+            "weeks": 3
+          },
+          {
+            "id": "integrales",
+            "fr": "Primitives et intégrales",
+            "ar": "الدوال الأصلية والتكامل",
+            "weeks": 3
+          },
+          {
+            "id": "fonctions",
+            "fr": "Généralités sur les fonctions (rappel)",
+            "ar": "عموميات حول الدوال",
+            "weeks": 1
+          },
+          {
+            "id": "ln",
+            "fr": "Fonctions logarithmes",
+            "ar": "الدوال اللوغاريتمية",
+            "weeks": 1
+          },
+          {
+            "id": "exp",
+            "fr": "Fonctions exponentielles",
+            "ar": "الدوال الأسية",
+            "weeks": 2
+          },
+          {
+            "id": "eqdiff",
+            "fr": "Équations différentielles",
+            "ar": "المعادلات التفاضلية",
+            "weeks": 1
+          },
+          {
+            "id": "angles",
+            "fr": "Angles orientés",
+            "ar": "الزوايا الموجهة",
+            "weeks": 1
+          },
+          {
+            "id": "bary",
+            "fr": "Barycentre et produit scalaire",
+            "ar": "المرجح والجداء السلمي",
+            "weeks": 2
+          },
+          {
+            "id": "espace",
+            "fr": "Configurations dans l’espace",
+            "ar": "الهندسة في الفضاء",
+            "weeks": 2
+          },
+          {
+            "id": "transf-plan",
+            "fr": "Transformations du plan",
+            "ar": "تحويلات المستوى",
+            "weeks": 3
+          },
+          {
+            "id": "courbes",
+            "fr": "Courbes planes",
+            "ar": "المنحنيات المستوية",
+            "weeks": 2
+          },
+          {
+            "id": "transf-espace",
+            "fr": "Transformations de l’espace",
+            "ar": "تحويلات الفضاء",
+            "weeks": 1
+          },
+          {
+            "id": "proba",
+            "fr": "Probabilités",
+            "ar": "الاحتمالات",
+            "weeks": 2
+          }
+        ]
+      },
+      "physics": {
+        "source": "draft",
+        "chapters": [
+          {
+            "id": "cinetique",
+            "fr": "Cinétique chimique",
+            "ar": "الحركية الكيميائية"
+          },
+          {
+            "id": "solutions",
+            "fr": "Acides, bases, pH et dosages",
+            "ar": "الأحماض والقواعد والمعايرة"
+          },
+          {
+            "id": "organique",
+            "fr": "Fonctions oxygénées et azotées",
+            "ar": "الوظائف العضوية الأكسجينية والآزوتية"
+          },
+          {
+            "id": "derives-acides",
+            "fr": "Dérivés des acides carboxyliques",
+            "ar": "مشتقات الأحماض الكربوكسيلية"
+          },
+          {
+            "id": "cinematique",
+            "fr": "Cinématique du point",
+            "ar": "حركية النقطة"
+          },
+          {
+            "id": "dynamique",
+            "fr": "Dynamique : lois de Newton, projectiles, satellites",
+            "ar": "التحريك: قوانين نيوتن، القذائف، الأقمار"
+          },
+          {
+            "id": "champ-electrique",
+            "fr": "Particule chargée dans un champ électrique",
+            "ar": "جسيم مشحون في مجال كهربائي"
+          },
+          {
+            "id": "champ-magnetique",
+            "fr": "Champ magnétique",
+            "ar": "المجال المغناطيسي"
+          },
+          {
+            "id": "particule-magnetique",
+            "fr": "Particule chargée dans un champ magnétique",
+            "ar": "جسيم مشحون في مجال مغناطيسي"
+          },
+          {
+            "id": "laplace",
+            "fr": "Force de Laplace",
+            "ar": "قوة لابلاس"
+          },
+          {
+            "id": "induction",
+            "fr": "Induction électromagnétique",
+            "ar": "التحريض الكهرومغناطيسي"
+          },
+          {
+            "id": "ondes",
+            "fr": "Vibrations et propagation",
+            "ar": "الاهتزازات والانتشار"
+          },
+          {
+            "id": "interf-meca",
+            "fr": "Interférences mécaniques",
+            "ar": "التداخل الميكانيكي"
+          },
+          {
+            "id": "interf-lum",
+            "fr": "Interférences lumineuses",
+            "ar": "التداخل الضوئي"
+          },
+          {
+            "id": "photoelectrique",
+            "fr": "Effet photoélectrique",
+            "ar": "المفعول الكهروضوئي"
+          },
+          {
+            "id": "nucleaire",
+            "fr": "Réactions nucléaires",
+            "ar": "التفاعلات النووية"
+          }
+        ]
+      },
+      "natsci": {
+        "source": "draft",
+        "chapters": [
+          {
+            "id": "reproduction",
+            "fr": "Reproduction chez les mammifères",
+            "ar": "التكاثر عند الثدييات"
+          },
+          {
+            "id": "genetique",
+            "fr": "Génétique",
+            "ar": "علم الوراثة"
+          },
+          {
+            "id": "genie-genetique",
+            "fr": "Génie génétique",
+            "ar": "الهندسة الوراثية"
+          },
+          {
+            "id": "nerveuse",
+            "fr": "Communication nerveuse",
+            "ar": "الاتصال العصبي"
+          },
+          {
+            "id": "muscle",
+            "fr": "Activité du muscle squelettique",
+            "ar": "نشاط العضلة الهيكلية"
+          },
+          {
+            "id": "cardiaque",
+            "fr": "Activité cardiaque",
+            "ar": "النشاط القلبي"
+          },
+          {
+            "id": "humorale",
+            "fr": "Communication humorale et intégration neuro-hormonale",
+            "ar": "الاتصال الهرموني والتكامل العصبي الهرموني"
+          },
+          {
+            "id": "immunite",
+            "fr": "Le système immunitaire",
+            "ar": "الجهاز المناعي"
+          }
+        ]
+      }
+    },
+    "D": {
+      "arabic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "textes",
+            "fr": "Étude de textes littéraires",
+            "ar": "دراسة النصوص الأدبية"
+          },
+          {
+            "id": "nahw",
+            "fr": "Grammaire (nahw et sarf)",
+            "ar": "النحو والصرف"
+          },
+          {
+            "id": "balagha",
+            "fr": "Rhétorique (balagha)",
+            "ar": "البلاغة"
+          },
+          {
+            "id": "arud",
+            "fr": "Prosodie (ʿarūḍ)",
+            "ar": "العروض"
+          },
+          {
+            "id": "insha",
+            "fr": "Expression écrite",
+            "ar": "التعبير والإنشاء"
+          }
+        ]
+      },
+      "french": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "resume",
+            "fr": "Résumé / contraction de texte",
+            "ar": "التلخيص"
+          },
+          {
+            "id": "commentaire",
+            "fr": "Commentaire et questions sur texte",
+            "ar": "التعليق وأسئلة النص"
+          },
+          {
+            "id": "dissertation",
+            "fr": "Dissertation / discussion",
+            "ar": "المقالة والمناقشة"
+          },
+          {
+            "id": "oeuvres",
+            "fr": "Œuvres au programme",
+            "ar": "المؤلفات المقررة"
+          },
+          {
+            "id": "langue",
+            "fr": "Grammaire et expression",
+            "ar": "القواعد والتعبير"
+          }
+        ]
+      },
+      "english": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "reading",
+            "fr": "Reading comprehension",
+            "ar": "فهم المقروء"
+          },
+          {
+            "id": "grammar",
+            "fr": "Grammar",
+            "ar": "القواعد"
+          },
+          {
+            "id": "vocabulary",
+            "fr": "Vocabulary",
+            "ar": "المفردات"
+          },
+          {
+            "id": "writing",
+            "fr": "Essay writing",
+            "ar": "كتابة المقال"
+          }
+        ]
+      },
+      "islamic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "aqida",
+            "fr": "Croyance (ʿaqīda)",
+            "ar": "العقيدة"
+          },
+          {
+            "id": "fiqh",
+            "fr": "Jurisprudence (fiqh)",
+            "ar": "الفقه"
+          },
+          {
+            "id": "hadith",
+            "fr": "Hadith",
+            "ar": "الحديث"
+          },
+          {
+            "id": "tafsir",
+            "fr": "Exégèse (tafsīr)",
+            "ar": "التفسير"
+          },
+          {
+            "id": "sira",
+            "fr": "Sīra et éthique",
+            "ar": "السيرة والأخلاق"
+          }
+        ]
+      },
+      "philo": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "methode-dissert",
+            "fr": "Méthode : dissertation",
+            "ar": "المنهجية: المقالة الفلسفية"
+          },
+          {
+            "id": "methode-texte",
+            "fr": "Méthode : analyse de texte",
+            "ar": "المنهجية: تحليل النص"
+          },
+          {
+            "id": "notions",
+            "fr": "Notions du programme",
+            "ar": "مفاهيم البرنامج"
+          },
+          {
+            "id": "auteurs",
+            "fr": "Auteurs et citations",
+            "ar": "الفلاسفة والأقوال"
+          }
+        ]
+      },
+      "maths": {
+        "source": "official",
+        "chapters": [
+          {
+            "id": "complexes",
+            "fr": "Nombres complexes",
+            "ar": "الأعداد العقدية",
+            "weeks": 4
+          },
+          {
+            "id": "suites",
+            "fr": "Suites numériques",
+            "ar": "المتتاليات العددية",
+            "weeks": 3
+          },
+          {
+            "id": "fonctions",
+            "fr": "Généralités sur les fonctions",
+            "ar": "عموميات حول الدوال",
+            "weeks": 4
+          },
+          {
+            "id": "integrales",
+            "fr": "Primitives et intégrales",
+            "ar": "الدوال الأصلية والتكامل",
+            "weeks": 3
+          },
+          {
+            "id": "ln",
+            "fr": "Fonctions logarithmes",
+            "ar": "الدوال اللوغاريتمية",
+            "weeks": 4
+          },
+          {
+            "id": "exp",
+            "fr": "Fonctions exponentielles",
+            "ar": "الدوال الأسية",
+            "weeks": 3
+          },
+          {
+            "id": "eqdiff",
+            "fr": "Équations différentielles",
+            "ar": "المعادلات التفاضلية",
+            "weeks": 2
+          },
+          {
+            "id": "proba",
+            "fr": "Probabilités",
+            "ar": "الاحتمالات",
+            "weeks": 4
+          }
+        ]
+      },
+      "physics": {
+        "source": "draft",
+        "chapters": [
+          {
+            "id": "cinetique",
+            "fr": "Cinétique chimique",
+            "ar": "الحركية الكيميائية"
+          },
+          {
+            "id": "solutions",
+            "fr": "Acides, bases, pH et dosages",
+            "ar": "الأحماض والقواعد والمعايرة"
+          },
+          {
+            "id": "organique",
+            "fr": "Fonctions oxygénées et azotées",
+            "ar": "الوظائف العضوية الأكسجينية والآزوتية"
+          },
+          {
+            "id": "derives-acides",
+            "fr": "Dérivés des acides carboxyliques",
+            "ar": "مشتقات الأحماض الكربوكسيلية"
+          },
+          {
+            "id": "cinematique",
+            "fr": "Cinématique du point",
+            "ar": "حركية النقطة"
+          },
+          {
+            "id": "dynamique",
+            "fr": "Dynamique : lois de Newton, projectiles, satellites",
+            "ar": "التحريك: قوانين نيوتن، القذائف، الأقمار"
+          },
+          {
+            "id": "champ-electrique",
+            "fr": "Particule chargée dans un champ électrique",
+            "ar": "جسيم مشحون في مجال كهربائي"
+          },
+          {
+            "id": "champ-magnetique",
+            "fr": "Champ magnétique",
+            "ar": "المجال المغناطيسي"
+          },
+          {
+            "id": "particule-magnetique",
+            "fr": "Particule chargée dans un champ magnétique",
+            "ar": "جسيم مشحون في مجال مغناطيسي"
+          },
+          {
+            "id": "laplace",
+            "fr": "Force de Laplace",
+            "ar": "قوة لابلاس"
+          },
+          {
+            "id": "induction",
+            "fr": "Induction électromagnétique",
+            "ar": "التحريض الكهرومغناطيسي"
+          },
+          {
+            "id": "ondes",
+            "fr": "Vibrations et propagation",
+            "ar": "الاهتزازات والانتشار"
+          },
+          {
+            "id": "interf-meca",
+            "fr": "Interférences mécaniques",
+            "ar": "التداخل الميكانيكي"
+          },
+          {
+            "id": "interf-lum",
+            "fr": "Interférences lumineuses",
+            "ar": "التداخل الضوئي"
+          },
+          {
+            "id": "photoelectrique",
+            "fr": "Effet photoélectrique",
+            "ar": "المفعول الكهروضوئي"
+          },
+          {
+            "id": "nucleaire",
+            "fr": "Réactions nucléaires",
+            "ar": "التفاعلات النووية"
+          }
+        ]
+      },
+      "natsci": {
+        "source": "draft",
+        "chapters": [
+          {
+            "id": "reproduction",
+            "fr": "Reproduction chez les mammifères",
+            "ar": "التكاثر عند الثدييات"
+          },
+          {
+            "id": "genetique",
+            "fr": "Génétique",
+            "ar": "علم الوراثة"
+          },
+          {
+            "id": "genie-genetique",
+            "fr": "Génie génétique",
+            "ar": "الهندسة الوراثية"
+          },
+          {
+            "id": "nerveuse",
+            "fr": "Communication nerveuse",
+            "ar": "الاتصال العصبي"
+          },
+          {
+            "id": "muscle",
+            "fr": "Activité du muscle squelettique",
+            "ar": "نشاط العضلة الهيكلية"
+          },
+          {
+            "id": "cardiaque",
+            "fr": "Activité cardiaque",
+            "ar": "النشاط القلبي"
+          },
+          {
+            "id": "humorale",
+            "fr": "Communication humorale et intégration neuro-hormonale",
+            "ar": "الاتصال الهرموني والتكامل العصبي الهرموني"
+          },
+          {
+            "id": "immunite",
+            "fr": "Le système immunitaire",
+            "ar": "الجهاز المناعي"
+          }
+        ]
+      }
+    },
+    "TM": {
+      "arabic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "textes",
+            "fr": "Étude de textes littéraires",
+            "ar": "دراسة النصوص الأدبية"
+          },
+          {
+            "id": "nahw",
+            "fr": "Grammaire (nahw et sarf)",
+            "ar": "النحو والصرف"
+          },
+          {
+            "id": "balagha",
+            "fr": "Rhétorique (balagha)",
+            "ar": "البلاغة"
+          },
+          {
+            "id": "arud",
+            "fr": "Prosodie (ʿarūḍ)",
+            "ar": "العروض"
+          },
+          {
+            "id": "insha",
+            "fr": "Expression écrite",
+            "ar": "التعبير والإنشاء"
+          }
+        ]
+      },
+      "french": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "resume",
+            "fr": "Résumé / contraction de texte",
+            "ar": "التلخيص"
+          },
+          {
+            "id": "commentaire",
+            "fr": "Commentaire et questions sur texte",
+            "ar": "التعليق وأسئلة النص"
+          },
+          {
+            "id": "dissertation",
+            "fr": "Dissertation / discussion",
+            "ar": "المقالة والمناقشة"
+          },
+          {
+            "id": "oeuvres",
+            "fr": "Œuvres au programme",
+            "ar": "المؤلفات المقررة"
+          },
+          {
+            "id": "langue",
+            "fr": "Grammaire et expression",
+            "ar": "القواعد والتعبير"
+          }
+        ]
+      },
+      "english": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "reading",
+            "fr": "Reading comprehension",
+            "ar": "فهم المقروء"
+          },
+          {
+            "id": "grammar",
+            "fr": "Grammar",
+            "ar": "القواعد"
+          },
+          {
+            "id": "vocabulary",
+            "fr": "Vocabulary",
+            "ar": "المفردات"
+          },
+          {
+            "id": "writing",
+            "fr": "Essay writing",
+            "ar": "كتابة المقال"
+          }
+        ]
+      },
+      "islamic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "aqida",
+            "fr": "Croyance (ʿaqīda)",
+            "ar": "العقيدة"
+          },
+          {
+            "id": "fiqh",
+            "fr": "Jurisprudence (fiqh)",
+            "ar": "الفقه"
+          },
+          {
+            "id": "hadith",
+            "fr": "Hadith",
+            "ar": "الحديث"
+          },
+          {
+            "id": "tafsir",
+            "fr": "Exégèse (tafsīr)",
+            "ar": "التفسير"
+          },
+          {
+            "id": "sira",
+            "fr": "Sīra et éthique",
+            "ar": "السيرة والأخلاق"
+          }
+        ]
+      },
+      "maths": {
+        "source": "draft",
+        "chapters": [
+          {
+            "id": "matrices",
+            "fr": "Matrices et systèmes linéaires",
+            "ar": "المصفوفات والأنظمة الخطية",
+            "weeks": 1
+          },
+          {
+            "id": "complexes",
+            "fr": "Nombres complexes",
+            "ar": "الأعداد العقدية",
+            "weeks": 4
+          },
+          {
+            "id": "arith",
+            "fr": "Arithmétique",
+            "ar": "الحسابيات",
+            "weeks": 3
+          },
+          {
+            "id": "integrales",
+            "fr": "Primitives et intégrales",
+            "ar": "الدوال الأصلية والتكامل",
+            "weeks": 3
+          },
+          {
+            "id": "fonctions",
+            "fr": "Généralités sur les fonctions (rappel)",
+            "ar": "عموميات حول الدوال",
+            "weeks": 1
+          },
+          {
+            "id": "ln",
+            "fr": "Fonctions logarithmes",
+            "ar": "الدوال اللوغاريتمية",
+            "weeks": 1
+          },
+          {
+            "id": "exp",
+            "fr": "Fonctions exponentielles",
+            "ar": "الدوال الأسية",
+            "weeks": 2
+          },
+          {
+            "id": "eqdiff",
+            "fr": "Équations différentielles",
+            "ar": "المعادلات التفاضلية",
+            "weeks": 1
+          },
+          {
+            "id": "angles",
+            "fr": "Angles orientés",
+            "ar": "الزوايا الموجهة",
+            "weeks": 1
+          },
+          {
+            "id": "bary",
+            "fr": "Barycentre et produit scalaire",
+            "ar": "المرجح والجداء السلمي",
+            "weeks": 2
+          },
+          {
+            "id": "espace",
+            "fr": "Configurations dans l’espace",
+            "ar": "الهندسة في الفضاء",
+            "weeks": 2
+          },
+          {
+            "id": "transf-plan",
+            "fr": "Transformations du plan",
+            "ar": "تحويلات المستوى",
+            "weeks": 3
+          },
+          {
+            "id": "courbes",
+            "fr": "Courbes planes",
+            "ar": "المنحنيات المستوية",
+            "weeks": 2
+          },
+          {
+            "id": "transf-espace",
+            "fr": "Transformations de l’espace",
+            "ar": "تحويلات الفضاء",
+            "weeks": 1
+          },
+          {
+            "id": "proba",
+            "fr": "Probabilités",
+            "ar": "الاحتمالات",
+            "weeks": 2
+          }
+        ]
+      },
+      "physics": {
+        "source": "draft",
+        "chapters": [
+          {
+            "id": "cinetique",
+            "fr": "Cinétique chimique",
+            "ar": "الحركية الكيميائية"
+          },
+          {
+            "id": "solutions",
+            "fr": "Acides, bases, pH et dosages",
+            "ar": "الأحماض والقواعد والمعايرة"
+          },
+          {
+            "id": "organique",
+            "fr": "Fonctions oxygénées et azotées",
+            "ar": "الوظائف العضوية الأكسجينية والآزوتية"
+          },
+          {
+            "id": "derives-acides",
+            "fr": "Dérivés des acides carboxyliques",
+            "ar": "مشتقات الأحماض الكربوكسيلية"
+          },
+          {
+            "id": "cinematique",
+            "fr": "Cinématique du point",
+            "ar": "حركية النقطة"
+          },
+          {
+            "id": "dynamique",
+            "fr": "Dynamique : lois de Newton, projectiles, satellites",
+            "ar": "التحريك: قوانين نيوتن، القذائف، الأقمار"
+          },
+          {
+            "id": "champ-electrique",
+            "fr": "Particule chargée dans un champ électrique",
+            "ar": "جسيم مشحون في مجال كهربائي"
+          },
+          {
+            "id": "champ-magnetique",
+            "fr": "Champ magnétique",
+            "ar": "المجال المغناطيسي"
+          },
+          {
+            "id": "particule-magnetique",
+            "fr": "Particule chargée dans un champ magnétique",
+            "ar": "جسيم مشحون في مجال مغناطيسي"
+          },
+          {
+            "id": "laplace",
+            "fr": "Force de Laplace",
+            "ar": "قوة لابلاس"
+          },
+          {
+            "id": "induction",
+            "fr": "Induction électromagnétique",
+            "ar": "التحريض الكهرومغناطيسي"
+          },
+          {
+            "id": "ondes",
+            "fr": "Vibrations et propagation",
+            "ar": "الاهتزازات والانتشار"
+          },
+          {
+            "id": "interf-meca",
+            "fr": "Interférences mécaniques",
+            "ar": "التداخل الميكانيكي"
+          },
+          {
+            "id": "interf-lum",
+            "fr": "Interférences lumineuses",
+            "ar": "التداخل الضوئي"
+          },
+          {
+            "id": "photoelectrique",
+            "fr": "Effet photoélectrique",
+            "ar": "المفعول الكهروضوئي"
+          },
+          {
+            "id": "nucleaire",
+            "fr": "Réactions nucléaires",
+            "ar": "التفاعلات النووية"
+          }
+        ]
+      },
+      "tech": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "construction",
+            "fr": "Construction mécanique",
+            "ar": "البناء الميكانيكي"
+          },
+          {
+            "id": "electrotech",
+            "fr": "Électrotechnique",
+            "ar": "الكهروتقنية"
+          },
+          {
+            "id": "dessin",
+            "fr": "Dessin technique",
+            "ar": "الرسم التقني"
+          }
+        ]
+      }
+    },
+    "LM": {
+      "arabic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "textes",
+            "fr": "Étude de textes littéraires",
+            "ar": "دراسة النصوص الأدبية"
+          },
+          {
+            "id": "nahw",
+            "fr": "Grammaire (nahw et sarf)",
+            "ar": "النحو والصرف"
+          },
+          {
+            "id": "balagha",
+            "fr": "Rhétorique (balagha)",
+            "ar": "البلاغة"
+          },
+          {
+            "id": "arud",
+            "fr": "Prosodie (ʿarūḍ)",
+            "ar": "العروض"
+          },
+          {
+            "id": "insha",
+            "fr": "Expression écrite",
+            "ar": "التعبير والإنشاء"
+          }
+        ]
+      },
+      "french": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "resume",
+            "fr": "Résumé / contraction de texte",
+            "ar": "التلخيص"
+          },
+          {
+            "id": "commentaire",
+            "fr": "Commentaire et questions sur texte",
+            "ar": "التعليق وأسئلة النص"
+          },
+          {
+            "id": "dissertation",
+            "fr": "Dissertation / discussion",
+            "ar": "المقالة والمناقشة"
+          },
+          {
+            "id": "oeuvres",
+            "fr": "Œuvres au programme",
+            "ar": "المؤلفات المقررة"
+          },
+          {
+            "id": "langue",
+            "fr": "Grammaire et expression",
+            "ar": "القواعد والتعبير"
+          }
+        ]
+      },
+      "english": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "reading",
+            "fr": "Reading comprehension",
+            "ar": "فهم المقروء"
+          },
+          {
+            "id": "grammar",
+            "fr": "Grammar",
+            "ar": "القواعد"
+          },
+          {
+            "id": "vocabulary",
+            "fr": "Vocabulary",
+            "ar": "المفردات"
+          },
+          {
+            "id": "writing",
+            "fr": "Essay writing",
+            "ar": "كتابة المقال"
+          }
+        ]
+      },
+      "islamic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "aqida",
+            "fr": "Croyance (ʿaqīda)",
+            "ar": "العقيدة"
+          },
+          {
+            "id": "fiqh",
+            "fr": "Jurisprudence (fiqh)",
+            "ar": "الفقه"
+          },
+          {
+            "id": "hadith",
+            "fr": "Hadith",
+            "ar": "الحديث"
+          },
+          {
+            "id": "tafsir",
+            "fr": "Exégèse (tafsīr)",
+            "ar": "التفسير"
+          },
+          {
+            "id": "sira",
+            "fr": "Sīra et éthique",
+            "ar": "السيرة والأخلاق"
+          }
+        ]
+      },
+      "philo": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "methode-dissert",
+            "fr": "Méthode : dissertation",
+            "ar": "المنهجية: المقالة الفلسفية"
+          },
+          {
+            "id": "methode-texte",
+            "fr": "Méthode : analyse de texte",
+            "ar": "المنهجية: تحليل النص"
+          },
+          {
+            "id": "notions",
+            "fr": "Notions du programme",
+            "ar": "مفاهيم البرنامج"
+          },
+          {
+            "id": "auteurs",
+            "fr": "Auteurs et citations",
+            "ar": "الفلاسفة والأقوال"
+          }
+        ]
+      },
+      "histgeo": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "histoire",
+            "fr": "Histoire",
+            "ar": "التاريخ"
+          },
+          {
+            "id": "geographie",
+            "fr": "Géographie",
+            "ar": "الجغرافيا"
+          },
+          {
+            "id": "methode",
+            "fr": "Méthode : documents et croquis",
+            "ar": "المنهجية: الوثائق والخرائط"
+          }
+        ]
+      },
+      "maths": {
+        "source": "official",
+        "chapters": [
+          {
+            "id": "second-degre",
+            "fr": "Équations et inéquations du second degré",
+            "ar": "معادلات ومتراجحات من الدرجة الثانية",
+            "weeks": 3
+          },
+          {
+            "id": "limites",
+            "fr": "Limites des fonctions",
+            "ar": "نهايات الدوال",
+            "weeks": 2
+          },
+          {
+            "id": "derivees",
+            "fr": "Dérivées",
+            "ar": "الاشتقاق",
+            "weeks": 2
+          },
+          {
+            "id": "rationnelles",
+            "fr": "Étude des fonctions rationnelles",
+            "ar": "دراسة الدوال الكسرية",
+            "weeks": 4
+          },
+          {
+            "id": "ln",
+            "fr": "Fonction logarithme népérien",
+            "ar": "دالة اللوغاريتم النيبيري",
+            "weeks": 2
+          },
+          {
+            "id": "eq-ln",
+            "fr": "Équations du second degré en ln x",
+            "ar": "معادلات من الدرجة الثانية بالمتغير ln x",
+            "weeks": 3
+          },
+          {
+            "id": "exp",
+            "fr": "Fonction exponentielle",
+            "ar": "الدالة الأسية",
+            "weeks": 2
+          },
+          {
+            "id": "eq-exp",
+            "fr": "Équations du second degré en eˣ",
+            "ar": "معادلات من الدرجة الثانية بالمتغير eˣ",
+            "weeks": 2
+          },
+          {
+            "id": "suites",
+            "fr": "Suites",
+            "ar": "المتتاليات",
+            "weeks": 5
+          },
+          {
+            "id": "denombrement",
+            "fr": "Dénombrement",
+            "ar": "العدّ",
+            "weeks": 2
+          },
+          {
+            "id": "proba",
+            "fr": "Probabilités",
+            "ar": "الاحتمالات",
+            "weeks": 1
+          }
+        ]
+      }
+    },
+    "LO": {
+      "arabic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "textes",
+            "fr": "Étude de textes littéraires",
+            "ar": "دراسة النصوص الأدبية"
+          },
+          {
+            "id": "nahw",
+            "fr": "Grammaire (nahw et sarf)",
+            "ar": "النحو والصرف"
+          },
+          {
+            "id": "balagha",
+            "fr": "Rhétorique (balagha)",
+            "ar": "البلاغة"
+          },
+          {
+            "id": "arud",
+            "fr": "Prosodie (ʿarūḍ)",
+            "ar": "العروض"
+          },
+          {
+            "id": "insha",
+            "fr": "Expression écrite",
+            "ar": "التعبير والإنشاء"
+          }
+        ]
+      },
+      "french": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "resume",
+            "fr": "Résumé / contraction de texte",
+            "ar": "التلخيص"
+          },
+          {
+            "id": "commentaire",
+            "fr": "Commentaire et questions sur texte",
+            "ar": "التعليق وأسئلة النص"
+          },
+          {
+            "id": "dissertation",
+            "fr": "Dissertation / discussion",
+            "ar": "المقالة والمناقشة"
+          },
+          {
+            "id": "oeuvres",
+            "fr": "Œuvres au programme",
+            "ar": "المؤلفات المقررة"
+          },
+          {
+            "id": "langue",
+            "fr": "Grammaire et expression",
+            "ar": "القواعد والتعبير"
+          }
+        ]
+      },
+      "english": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "reading",
+            "fr": "Reading comprehension",
+            "ar": "فهم المقروء"
+          },
+          {
+            "id": "grammar",
+            "fr": "Grammar",
+            "ar": "القواعد"
+          },
+          {
+            "id": "vocabulary",
+            "fr": "Vocabulary",
+            "ar": "المفردات"
+          },
+          {
+            "id": "writing",
+            "fr": "Essay writing",
+            "ar": "كتابة المقال"
+          }
+        ]
+      },
+      "islamic": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "aqida",
+            "fr": "Croyance (ʿaqīda)",
+            "ar": "العقيدة"
+          },
+          {
+            "id": "fiqh",
+            "fr": "Jurisprudence (fiqh)",
+            "ar": "الفقه"
+          },
+          {
+            "id": "hadith",
+            "fr": "Hadith",
+            "ar": "الحديث"
+          },
+          {
+            "id": "tafsir",
+            "fr": "Exégèse (tafsīr)",
+            "ar": "التفسير"
+          },
+          {
+            "id": "sira",
+            "fr": "Sīra et éthique",
+            "ar": "السيرة والأخلاق"
+          }
+        ]
+      },
+      "philo": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "methode-dissert",
+            "fr": "Méthode : dissertation",
+            "ar": "المنهجية: المقالة الفلسفية"
+          },
+          {
+            "id": "methode-texte",
+            "fr": "Méthode : analyse de texte",
+            "ar": "المنهجية: تحليل النص"
+          },
+          {
+            "id": "notions",
+            "fr": "Notions du programme",
+            "ar": "مفاهيم البرنامج"
+          },
+          {
+            "id": "auteurs",
+            "fr": "Auteurs et citations",
+            "ar": "الفلاسفة والأقوال"
+          }
+        ]
+      },
+      "histgeo": {
+        "source": "generic",
+        "chapters": [
+          {
+            "id": "histoire",
+            "fr": "Histoire",
+            "ar": "التاريخ"
+          },
+          {
+            "id": "geographie",
+            "fr": "Géographie",
+            "ar": "الجغرافيا"
+          },
+          {
+            "id": "methode",
+            "fr": "Méthode : documents et croquis",
+            "ar": "المنهجية: الوثائق والخرائط"
+          }
+        ]
+      }
+    }
+  },
+  "links": [
+    {
+      "title": "maurimath.net",
+      "url": "https://maurimath.net/",
+      "category": "site",
+      "fr": "Programmes officiels et documents de mathématiques",
+      "ar": "البرامج الرسمية ووثائق الرياضيات"
+    },
+    {
+      "title": "Sigmaths — BAC Mauritanie",
+      "url": "https://www.sigmaths.net/bac2/mauritanie.php",
+      "category": "site",
+      "fr": "Sujets de mathématiques du BAC mauritanien",
+      "ar": "مواضيع الرياضيات في الباكالوريا الموريتانية"
+    },
+    {
+      "title": "Devoir.tn — Physique Mauritanie",
+      "url": "https://www.devoir.tn/secondaire/Bac-%C3%A9tranger/Mauritanie/Physiques.html",
+      "category": "site",
+      "fr": "Annales de sciences physiques",
+      "ar": "امتحانات سابقة في العلوم الفيزيائية"
+    },
+    {
+      "title": "RimBac",
+      "url": "https://rimbac.com/",
+      "category": "site",
+      "fr": "Manuels et préparation au BAC",
+      "ar": "كتب مدرسية وتحضير للباكالوريا"
+    }
+  ]
+}

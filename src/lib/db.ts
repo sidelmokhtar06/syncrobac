@@ -1,7 +1,8 @@
 import { createContext, useContext } from 'react'
 import Dexie, { type EntityTable } from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { DEFAULT_BAC_DATE, getSerie, type SerieId, type Subject } from '../config/bac'
+import { defaultBacDate, getSerie, type SerieId, type Subject } from '../config/bac'
+import type { ContentBundle } from '../config/content'
 
 export type Lang = 'fr' | 'ar'
 export type TimerMode = 'pomodoro' | 'short' | 'long' | 'custom'
@@ -98,6 +99,7 @@ export const db = new Dexie('syncrobac') as Dexie & {
   customChapters: EntityTable<CustomChapter, 'id'>
   missions: EntityTable<DayMissions, 'date'>
   links: EntityTable<SavedLink, 'id'>
+  content: EntityTable<{ key: string; bundle: ContentBundle; fetchedAt: number }, 'key'>
 }
 
 db.version(1).stores({
@@ -116,13 +118,16 @@ db.version(2).stores({
   links: '++id, category',
 })
 
+// v3: cached copy of the admin-managed content bundle (see config/content.ts)
+db.version(3).stores({ content: 'key' })
+
 const DURATIONS = { pomodoro: 25, short: 5, long: 15, custom: 45 }
 
 export const DEFAULT_SETTINGS: Settings = {
   id: 1,
   serie: null,
   lang: navigator.language.startsWith('ar') ? 'ar' : 'fr',
-  bacDate: DEFAULT_BAC_DATE,
+  bacDate: defaultBacDate(),
   coeffOverrides: {},
   durations: DURATIONS,
   timer: { mode: 'pomodoro', endsAt: null, remainingMs: DURATIONS.pomodoro * 60_000, subjectId: null, chapterId: null },

@@ -128,7 +128,7 @@ export default function Settings() {
               type="date"
               aria-label={t('bacDate')}
               value={s.bacDate.slice(0, 10)}
-              onChange={(e) => e.target.value && updateSettings({ bacDate: `${e.target.value}T08:00:00Z` })}
+              onChange={(e) => e.target.value && updateSettings({ bacDate: `${e.target.value}T08:00:00Z`, bacCustom: true })}
               className={cn(inputClass, 'w-44')}
             />
           </Row>

@@ -12,6 +12,7 @@ export interface Settings {
   serie: SerieId | null
   lang: Lang
   bacDate: string
+  bacCustom?: boolean // true once the student sets their own date; otherwise follow the admin's
   coeffOverrides: Partial<Record<string, number>>
   durations: Record<TimerMode, number> // minutes
   timer: { mode: TimerMode; endsAt: number | null; remainingMs: number; subjectId: string | null; chapterId?: string | null }
@@ -144,7 +145,11 @@ export const today = (d = new Date()) =>
 
 // Loaded once in <App>; children read it from context so it's never undefined below the root.
 export const useSettingsQuery = () =>
-  useLiveQuery(async (): Promise<Settings> => ({ ...DEFAULT_SETTINGS, ...(await db.settings.get(1)) }))
+  useLiveQuery(async (): Promise<Settings> => {
+    const s = { ...DEFAULT_SETTINGS, ...(await db.settings.get(1)) }
+    // Unless the student picked their own date, always use the current (admin-managed) BAC date.
+    return s.bacCustom ? s : { ...s, bacDate: defaultBacDate() }
+  })
 
 export const SettingsContext = createContext<Settings>(DEFAULT_SETTINGS)
 export const useSettings = () => useContext(SettingsContext)

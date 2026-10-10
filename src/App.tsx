@@ -31,6 +31,7 @@ const Progress = lazy(() => import('./pages/Progress'))
 const SimulatorPage = lazy(() => import('./pages/SimulatorPage'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Coffee = lazy(() => import('./pages/Coffee'))
+const Admin = lazy(() => import('./pages/Admin')) // owner-only tool, not linked anywhere
 
 // `owns`: path prefixes that keep the tab highlighted on its sub-pages.
 const TABS = [
@@ -42,8 +43,9 @@ const TABS = [
 ] satisfies { to: string; key: TKey; Icon: unknown; owns: string[] }[]
 
 const tabOf = (path: string) => {
-  const i = TABS.findIndex((x) => x.owns.some((p) => path === p || path.startsWith(p + '/')))
-  return i === -1 ? 0 : i
+  // `/` belongs to Accueil; unknown paths (e.g. /admin) highlight no tab.
+  if (path === '/') return 0
+  return TABS.findIndex((x) => x.owns.some((p) => path === p || path.startsWith(p + '/')))
 }
 const depthOf = (path: string) => path.split('/').filter(Boolean).length
 
@@ -140,6 +142,7 @@ function Shell() {
                   <Route path="/simulator" element={<SimulatorPage />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/coffee" element={<Coffee />} />
+                  <Route path="/admin" element={<Admin />} />
                   {/* Old URLs from earlier versions */}
                   <Route path="/checklist" element={<Navigate to="/subjects" replace />} />
                   <Route path="/profile" element={<Navigate to="/me" replace />} />

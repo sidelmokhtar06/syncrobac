@@ -65,6 +65,25 @@ export default function App() {
     return () => clearTimeout(id)
   }, [!!s])
 
+  // Theme: explicit choice or follow the phone; mirrored to localStorage for public/theme-init.js.
+  useEffect(() => {
+    if (!s) return
+    const media = matchMedia('(prefers-color-scheme: light)')
+    const apply = () => {
+      const theme = s.theme === 'system' ? (media.matches ? 'light' : 'dark') : s.theme
+      document.documentElement.dataset.theme = theme
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f4f6f8' : '#0a0d12')
+    }
+    apply()
+    try {
+      localStorage.setItem('syncrobac-theme', s.theme)
+    } catch {
+      /* boot script falls back to system */
+    }
+    media.addEventListener('change', apply)
+    return () => media.removeEventListener('change', apply)
+  }, [s?.theme])
+
   useEffect(() => {
     if (!s) return
     document.documentElement.lang = s.lang

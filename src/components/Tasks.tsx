@@ -63,17 +63,13 @@ function TaskRow({ task }: { task: Task }) {
         {/* 44px hit area around a 22px box */}
         <button onClick={toggle} aria-label={task.title} aria-pressed={task.done} className="relative grid size-11 shrink-0 place-items-center">
           <m.span
-            animate={{
-              backgroundColor: task.done ? '#22C1D6' : 'rgba(0,0,0,0)',
-              borderColor: task.done ? '#22C1D6' : '#4A5363',
-              scale: task.done ? [1, 1.15, 1] : 1,
-            }}
+            animate={{ scale: task.done ? [1, 1.15, 1] : 1 }}
             transition={{ duration: 0.25 }}
-            className="absolute size-[22px] rounded-md border-2"
+            className={cn('absolute size-[22px] rounded-md border-2 transition-colors duration-200', task.done ? 'border-accent bg-accent' : 'border-ink-3/70')}
           />
           <svg viewBox="0 0 24 24" className="relative size-4">
             <m.path
-              d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#061A1F" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+              d="M5 12.5l4.5 4.5L19 7.5" fill="none" className="stroke-accent-ink" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
               initial={false}
               animate={{ pathLength: task.done ? 1 : 0 }}
               transition={{ duration: 0.25, delay: task.done ? 0.06 : 0 }}

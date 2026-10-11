@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { enableAdminEntry } from '../lib/adminEntry'
-import { BellRing, Download, Trash2, Upload } from 'lucide-react'
+import { BellRing, Download, Monitor, Moon, Sun, Trash2, Upload } from 'lucide-react'
 import { enableNotifications, notifyPermission, notifySupported } from '../lib/pwa'
 import { LanguagesIcon } from '../components/icons/languages'
 import { Item, Stagger } from '../components/motion'
@@ -79,6 +79,20 @@ export default function Settings() {
           <Row label={t('language')} icon={<Anim icon={LanguagesIcon} size={18} play={s.lang} />}>
             <div className="w-40">
               <Segmented<Lang> id="lang" value={s.lang} onChange={(v) => updateSettings({ lang: v })} options={[{ value: 'fr', label: 'FR' }, { value: 'ar', label: 'ع' }]} />
+            </div>
+          </Row>
+          <Row label={t('theme')}>
+            <div className="w-56">
+              <Segmented<'system' | 'light' | 'dark'>
+                id="theme"
+                value={s.theme}
+                onChange={(v) => updateSettings({ theme: v })}
+                options={[
+                  { value: 'system', label: t('themeAuto'), icon: <Monitor size={14} /> },
+                  { value: 'light', label: t('themeLight'), icon: <Sun size={14} /> },
+                  { value: 'dark', label: t('themeDark'), icon: <Moon size={14} /> },
+                ]}
+              />
             </div>
           </Row>
           <Row label={t('serie')}>

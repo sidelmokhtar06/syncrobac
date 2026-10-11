@@ -11,6 +11,7 @@ export interface Settings {
   id: 1
   serie: SerieId | null
   lang: Lang
+  theme: 'system' | 'light' | 'dark'
   bacDate: string
   bacCustom?: boolean // true once the student sets their own date; otherwise follow the admin's
   coeffOverrides: Partial<Record<string, number>>
@@ -128,6 +129,7 @@ export const DEFAULT_SETTINGS: Settings = {
   id: 1,
   serie: null,
   lang: navigator.language.startsWith('ar') ? 'ar' : 'fr',
+  theme: 'system',
   bacDate: defaultBacDate(),
   coeffOverrides: {},
   durations: DURATIONS,

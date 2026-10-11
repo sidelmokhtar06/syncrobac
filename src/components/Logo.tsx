@@ -19,7 +19,7 @@ export function LogoMark({ className = 'h-8 w-auto', animated = false, delay = 0
           <stop offset="1" stopColor="#3CCB8C" />
         </linearGradient>
       </defs>
-      {animated && <path d={LOOP} fill="none" stroke="#1a1f28" strokeWidth="7" />}
+      {animated && <path d={LOOP} fill="none" className="stroke-raised" strokeWidth="7" />}
       <m.path d={LOOP} fill="none" stroke="url(#sb-g)" strokeWidth="7" strokeLinecap="round" {...draw(0, 1.1)} />
       <m.path d={PULSE} fill="none" stroke="#22C1D6" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" {...draw(0.9, 0.5)} />
       <m.circle

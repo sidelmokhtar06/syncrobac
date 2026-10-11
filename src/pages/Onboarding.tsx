@@ -293,12 +293,9 @@ function CatchupSubject({ title, coeff, chapters, selected, onToggle, defaultOpe
               return (
                 <li key={c.id}>
                   <button onClick={() => onToggle(c.id)} aria-pressed={on} className="flex min-h-12 w-full items-center gap-3 rounded-lg px-2 text-start">
-                    <m.span
-                      animate={{ backgroundColor: on ? '#22C1D6' : 'rgba(0,0,0,0)', borderColor: on ? '#22C1D6' : '#4A5363' }}
-                      className="grid size-[22px] shrink-0 place-items-center rounded-md border-2 text-accent-ink"
-                    >
+                    <span className={cn('grid size-[22px] shrink-0 place-items-center rounded-md border-2 text-accent-ink transition-colors duration-200', on ? 'border-accent bg-accent' : 'border-ink-3/70')}>
                       {on && <Check size={14} strokeWidth={3} />}
-                    </m.span>
+                    </span>
                     <span className={cn('text-[15px]', on ? 'text-ink' : 'text-ink-2')}>{c.title[lang]}</span>
                   </button>
                 </li>
@@ -375,7 +372,7 @@ function Syncing({ serieLabel }: { serieLabel: string }) {
             <span className="relative grid size-6 shrink-0 place-items-center">
               <m.span className="absolute inset-0 rounded-full bg-success/15" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.75 + i * 0.6, ...spring }} />
               <svg viewBox="0 0 24 24" className="relative size-4">
-                <m.path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#3CCB8C" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.85 + i * 0.6, duration: 0.3 }} />
+                <m.path d="M5 12.5l4.5 4.5L19 7.5" fill="none" className="stroke-success" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.85 + i * 0.6, duration: 0.3 }} />
               </svg>
             </span>
             <span className="text-sm text-ink">{line}</span>

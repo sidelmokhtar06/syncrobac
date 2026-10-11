@@ -41,8 +41,7 @@ export default function Dashboard() {
 
   // Header turns into a frosted bar once the page scrolls.
   const { scrollY } = useScroll({ container: useScrollContainer() })
-  const barBg = useTransform(scrollY, [0, 48], ['rgba(10,13,18,0)', 'rgba(10,13,18,1)'])
-  const barBorder = useTransform(scrollY, [0, 48], ['rgba(35,42,53,0)', 'rgba(35,42,53,1)'])
+  const barOpacity = useTransform(scrollY, [0, 48], [0, 1])
 
   useEffect(() => {
     if (all.size) ensureMissions(s, all)
@@ -69,9 +68,11 @@ export default function Dashboard() {
     <Stagger className="flex flex-col gap-6">
       {/* Sticky bar spans <main>'s top padding (safe area included) so nothing peeks above it. */}
       <m.div
-        style={{ backgroundColor: barBg, borderColor: barBorder, top: `calc(-1 * ${TOP_PAD})`, marginTop: `calc(-1 * ${TOP_PAD})`, paddingTop: TOP_PAD }}
-        className="sticky z-30 -mx-5 flex items-center justify-between border-b px-5 pb-2"
+        style={{ top: `calc(-1 * ${TOP_PAD})`, marginTop: `calc(-1 * ${TOP_PAD})`, paddingTop: TOP_PAD }}
+        className="sticky z-30 -mx-5 flex items-center justify-between px-5 pb-2"
       >
+        {/* Theme-aware background that fades in with scroll */}
+        <m.span aria-hidden style={{ opacity: barOpacity }} className="absolute inset-0 -z-10 border-b border-line bg-bg" />
         <div className="flex items-center gap-2">
           <LogoMark animated className="h-7 w-auto" />
           <Wordmark animated delay={0.4} className="text-base" />
@@ -148,9 +149,20 @@ export default function Dashboard() {
             </Link>
           }
         >
-          {t('missions')} <span className="tnum text-ink-3">· {doneCount}/{items.length}</span>
+          {t('missions')} {missions && <span className="tnum text-ink-3">· {doneCount}/{items.length}</span>}
         </SectionTitle>
         <div className="card divide-y divide-line">
+          {/* Skeleton while today's missions are being generated (first open of the day) */}
+          {!missions &&
+            [0, 1, 2].map((i) => (
+              <div key={i} className="flex min-h-16 items-center gap-3 px-3" aria-hidden>
+                <span className="size-6 shrink-0 rounded-full bg-raised" />
+                <span className="flex-1 space-y-2">
+                  <m.span className="block h-2.5 w-24 rounded-full bg-raised" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.15 }} />
+                  <m.span className="block h-3 w-44 rounded-full bg-raised" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.15 + 0.1 }} />
+                </span>
+              </div>
+            ))}
           {items.map((mi, i) => (
             <MissionRow
               key={mi.subjectId + mi.chapterId}
@@ -221,16 +233,13 @@ function MissionRow({ mission, subjectName, chapterName, onToggle, onStart, to }
           if (!mission.done) setFire(Date.now())
           onToggle()
         }} aria-pressed={mission.done} aria-label={chapterName} className="relative grid size-12 shrink-0 place-items-center">
-        <m.span
-          animate={{ backgroundColor: mission.done ? '#3CCB8C' : 'rgba(0,0,0,0)', borderColor: mission.done ? '#3CCB8C' : '#4A5363' }}
-          className="grid size-6 place-items-center rounded-full border-2 text-bg"
-        >
+        <span className={cn('grid size-6 place-items-center rounded-full border-2 text-bg transition-colors duration-200', mission.done ? 'border-success bg-success' : 'border-ink-3/70')}>
           {mission.done && (
             <m.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={spring}>
               <Check size={14} strokeWidth={3} />
             </m.span>
           )}
-        </m.span>
+        </span>
         <Burst fire={fire} count={8} radius={22} />
       </button>
       <Link to={to} className="min-w-0 flex-1 py-2">

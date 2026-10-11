@@ -19,7 +19,7 @@ export function LogoHero() {
         aria-hidden
         className="pointer-events-none absolute -inset-x-16 -inset-y-24 opacity-60"
         style={{
-          backgroundImage: 'radial-gradient(#2f3745 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(var(--color-line-strong) 1px, transparent 1px)',
           backgroundSize: '18px 18px',
           maskImage: 'radial-gradient(circle at center, black 0%, transparent 65%)',
           WebkitMaskImage: 'radial-gradient(circle at center, black 0%, transparent 65%)',

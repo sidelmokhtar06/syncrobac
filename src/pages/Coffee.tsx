@@ -137,7 +137,7 @@ function Cup({ fill }: { fill: number }) {
           key={x}
           d={`M${x} 2 q-6 -8 0 -16 q6 -8 0 -16`}
           fill="none"
-          stroke="#A3ADBB"
+          className="stroke-ink-3"
           strokeWidth="3"
           strokeLinecap="round"
           initial={{ opacity: 0, y: 6 }}
@@ -153,12 +153,12 @@ function Cup({ fill }: { fill: number }) {
       {/* cup outline + handle + saucer */}
       <m.path
         d="M22 10 h60 v34 a30 30 0 0 1 -30 30 a30 30 0 0 1 -30 -30 z"
-        fill="none" stroke="#E8ECF1" strokeWidth="4" strokeLinejoin="round"
+        fill="none" className="stroke-ink" strokeWidth="4" strokeLinejoin="round"
         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: EASE }}
       />
       <m.path
         d="M82 22 h6 a12 12 0 0 1 0 24 h-8"
-        fill="none" stroke="#E8ECF1" strokeWidth="4" strokeLinecap="round"
+        fill="none" className="stroke-ink" strokeWidth="4" strokeLinecap="round"
         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.6, duration: 0.5, ease: EASE }}
       />
       <m.path

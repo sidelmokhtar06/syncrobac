@@ -217,9 +217,9 @@ function TimerFace({ s, total }: { s: Settings; total: number }) {
   return (
     <>
       <svg viewBox="0 0 256 256" className="size-full">
-        <circle cx="128" cy="128" r={r} stroke="#1a1f28" strokeWidth="8" fill="none" />
+        <circle cx="128" cy="128" r={r} className="stroke-raised" strokeWidth="8" fill="none" />
         <m.circle
-          cx="128" cy="128" r={r} fill="none" stroke="#22C1D6" strokeWidth="8" strokeLinecap="round"
+          cx="128" cy="128" r={r} fill="none" className="stroke-accent" strokeWidth="8" strokeLinecap="round"
           strokeDasharray={c} transform="rotate(-90 128 128)"
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: c * (1 - left / total) }}

@@ -1,6 +1,6 @@
-// Admin API: Supabase Auth (email + password) and authenticated writes over PostgREST.
-// Security is enforced server-side by RLS (supabase/schema.sql): only users listed in
-// `admins` can write. This module only carries the signed-in user's token.
+// Admin API: Supabase Auth (email + password + TOTP two-factor) and authenticated writes over PostgREST.
+// Security is enforced server-side by RLS (supabase/schema.sql + security.sql): only users listed
+// in `admins` whose session passed two-factor (aal2) can write. This module only carries the token.
 
 const URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -46,7 +46,66 @@ async function authRequest(grant: 'password' | 'refresh_token', body: object) {
     if (/not confirmed/i.test(msg)) throw new Error('Email non confirmé : dans Supabase → Authentication → Users, confirme l’utilisateur.')
     throw new Error(msg || 'Connexion impossible')
   }
-  save({ access_token: json.access_token, refresh_token: json.refresh_token, expires_at: json.expires_at, email: json.user?.email ?? '' })
+  storeTokens(json)
+}
+
+const storeTokens = (json: { access_token: string; refresh_token: string; expires_at: number; user?: { email?: string } }) =>
+  save({ access_token: json.access_token, refresh_token: json.refresh_token, expires_at: json.expires_at, email: json.user?.email ?? session?.email ?? '' })
+
+// ── Two-factor (TOTP) ───────────────────────────────────────────────────
+
+/** Authentication Assurance Level of the current session: aal1 = password only, aal2 = password + code. */
+export function aal(): 'aal1' | 'aal2' | null {
+  if (!session) return null
+  try {
+    const payload = JSON.parse(atob(session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+    return payload.aal ?? 'aal1'
+  } catch {
+    return 'aal1'
+  }
+}
+
+async function authApi<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${URL}/auth/v1/${path}`, {
+    ...init,
+    headers: { apikey: KEY!, Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json' },
+  })
+  const text = await res.text()
+  const json = text ? JSON.parse(text) : null
+  if (!res.ok) throw new Error(json?.msg ?? json?.message ?? json?.error_description ?? `Erreur ${res.status}`)
+  return json as T
+}
+
+interface Factor {
+  id: string
+  factor_type: string
+  status: 'verified' | 'unverified'
+}
+
+export const verifiedTotp = async () =>
+  ((await authApi<{ factors?: Factor[] }>('user')).factors ?? []).find((f) => f.factor_type === 'totp' && f.status === 'verified') ?? null
+
+/** Starts TOTP enrollment (removing any abandoned attempt). Returns the QR image and the manual secret. */
+export async function enrollTotp() {
+  const factors = (await authApi<{ factors?: Factor[] }>('user')).factors ?? []
+  for (const f of factors.filter((x) => x.status === 'unverified')) await authApi(`factors/${f.id}`, { method: 'DELETE' })
+  const res = await authApi<{ id: string; totp: { qr_code: string; secret: string } }>('factors', {
+    method: 'POST',
+    body: JSON.stringify({ factor_type: 'totp', issuer: 'SyncroBac', friendly_name: `SyncroBac ${new Date().toISOString().slice(0, 10)}` }),
+  })
+  const qr = res.totp.qr_code.startsWith('data:') ? res.totp.qr_code : `data:image/svg+xml;utf8,${encodeURIComponent(res.totp.qr_code)}`
+  return { factorId: res.id, qr, secret: res.totp.secret }
+}
+
+/** Verifies a 6-digit code for a factor; on success the session is upgraded to aal2. */
+export async function verifyTotp(factorId: string, code: string) {
+  const { id: challengeId } = await authApi<{ id: string }>(`factors/${factorId}/challenge`, { method: 'POST' })
+  try {
+    const json = await authApi<Parameters<typeof storeTokens>[0]>(`factors/${factorId}/verify`, { method: 'POST', body: JSON.stringify({ challenge_id: challengeId, code }) })
+    storeTokens(json)
+  } catch (e) {
+    throw new Error(/invalid|expired/i.test((e as Error).message) ? 'Code incorrect ou expiré.' : (e as Error).message)
+  }
 }
 
 export const signIn = (email: string, password: string) => authRequest('password', { email, password })

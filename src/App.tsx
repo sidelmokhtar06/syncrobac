@@ -100,6 +100,7 @@ function Shell() {
 
   // Direction-aware page slide (mirrored in RTL): across tabs by tab order, within a tab by depth.
   const idx = tabOf(loc.pathname)
+  const adminArea = loc.pathname === '/admin' || loc.pathname.startsWith('/admin/')
   const depth = depthOf(loc.pathname)
   const prev = useRef({ idx, depth })
   const forward = idx === prev.current.idx ? depth >= prev.current.depth : idx > prev.current.idx
@@ -155,6 +156,7 @@ function Shell() {
       </m.main>
 
       {/* Opaque + own GPU layer: no backdrop blur repainting over scrolling content on Android. */}
+      {!adminArea && (
       <nav className="fixed inset-x-0 bottom-0 z-40 transform-gpu border-t border-line bg-bg pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-md px-1">
           {TABS.map(({ to, key, Icon }, i) => {
@@ -173,6 +175,7 @@ function Shell() {
           })}
         </div>
       </nav>
+      )}
 
       <TimerWatcher onFocusDone={openCelebrate} />
       <Celebration open={celebrate} onClose={closeCelebrate} />

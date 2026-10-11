@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Download, FileText, Headphones, Users, Zap } from 'lucide-react'
+import { Download, FileText, Headphones, ShieldCheck, Users, Zap } from 'lucide-react'
+import { adminEntryEnabled } from '../lib/adminEntry'
 import { InstallSheet } from '../components/InstallSheet'
 import { useInstall } from '../lib/pwa'
 import { BotIcon } from '../components/icons/bot'
@@ -90,6 +91,7 @@ export default function Me() {
         <SectionTitle>{t('account')}</SectionTitle>
         <div className="card divide-y divide-line">
           <ListLink to="/settings" icon={<Anim icon={SettingsIcon} size={18} />} label={t('settings')} hint={t('dataExplain')} />
+          {adminEntryEnabled() && <ListLink to="/admin" icon={<ShieldCheck size={18} />} label="Administration" hint="Accès protégé · 2FA" />}
           {!install.installed && (
             <button onClick={() => (install.canPrompt ? install.prompt() : setHowTo(true))} className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-start transition-colors active:bg-raised">
               <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent/12 text-accent">

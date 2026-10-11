@@ -34,7 +34,8 @@ export function assembleBundle({ series, serieSubjects, chapters, resources, con
         }),
     })),
     programme: {},
-    links: resources.map((r) => ({
+    // Defense in depth (the DB also enforces it): only https links ever reach students.
+    links: resources.filter((r) => /^https:\/\/[^\s]+$/i.test(String(r.url ?? ''))).map((r) => ({
       title: r.title as string,
       url: r.url as string,
       category: r.category as LinkDef['category'],

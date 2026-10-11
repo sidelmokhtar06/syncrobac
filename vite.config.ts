@@ -1,9 +1,25 @@
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// `pnpm preview` serves the same global security headers as production (vercel.json),
+// so the Content-Security-Policy is tested locally before it ships.
+const vercel = JSON.parse(readFileSync(new URL('./vercel.json', import.meta.url), 'utf8'))
+const globalHeaders = Object.fromEntries(
+  vercel.headers
+    .find((h: { source: string }) => h.source === '/(.*)')
+    // Local preview is plain http (also on the LAN), so don't upgrade requests to https there.
+    .headers.map((h: { key: string; value: string }) => [h.key, h.value.replace(/;\s*upgrade-insecure-requests/, '')]),
+)
+
 export default defineConfig({
+  preview: { headers: globalHeaders },
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+  },
   plugins: [
     react(),
     tailwindcss(),

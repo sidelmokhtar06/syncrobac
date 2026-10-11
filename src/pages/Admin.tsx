@@ -1,26 +1,41 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, m } from 'motion/react'
-import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Eye, EyeOff, LogOut, Plus, ShieldAlert, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Eye, EyeOff, History, KeyRound, LogOut, Plus, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react'
 import { LogoMark } from '../components/Logo'
 import { EASE, Item, Stagger } from '../components/motion'
 import { Button, Chip, IconButton, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
-import { adminConfigured, api, currentEmail, isAdmin, publish, signIn, signOut, slugKey } from '../lib/admin'
+import { aal, adminConfigured, api, currentEmail, enrollTotp, isAdmin, publish, signIn, signOut, slugKey, verifiedTotp, verifyTotp } from '../lib/admin'
 import { cn } from '../lib/cn'
 import { refreshContent } from '../lib/contentSync'
 
-// Internal tool for the app owner (French only). Students never see it: no link, own chunk.
+// Internal tool for the app owner (French only, always LTR). Students never see it: no public
+// link, own chunk. Access: password → two-factor code (TOTP) → admin check. Writes are enforced
+// server-side (RLS requires admin + aal2), this UI only mirrors those rules.
+
+const IDLE_MS = 15 * 60_000
 
 type Tab = 'resources' | 'subjects' | 'chapters' | 'general'
 type Row = Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export default function Admin() {
-  const [state, setState] = useState<'loading' | 'signedOut' | 'notAdmin' | 'ready'>('loading')
+  const [state, setState] = useState<'loading' | 'signedOut' | 'mfa' | 'enroll' | 'notAdmin' | 'ready'>('loading')
+  const [factorId, setFactorId] = useState('')
+  const [expired, setExpired] = useState(false)
   const [tab, setTab] = useState<Tab>('resources')
   const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null)
 
   const check = useCallback(async () => {
     if (!currentEmail()) return setState('signedOut')
     try {
+      // Two-factor is mandatory: password-only sessions must enroll or confirm a code first.
+      if (aal() !== 'aal2') {
+        const factor = await verifiedTotp()
+        if (factor) {
+          setFactorId(factor.id)
+          return setState('mfa')
+        }
+        return setState('enroll')
+      }
       setState((await isAdmin()) ? 'ready' : 'notAdmin')
     } catch {
       signOut()
@@ -28,6 +43,30 @@ export default function Admin() {
     }
   }, [])
   useEffect(() => void check(), [check])
+
+  const leave = useCallback(() => {
+    signOut()
+    setState('signedOut')
+  }, [])
+
+  // Auto sign-out after 15 minutes without interaction.
+  useEffect(() => {
+    if (state === 'signedOut' || state === 'loading') return
+    let last = Date.now()
+    const bump = () => (last = Date.now())
+    const events = ['pointerdown', 'keydown', 'scroll'] as const
+    events.forEach((e) => window.addEventListener(e, bump, { passive: true, capture: true }))
+    const id = setInterval(() => {
+      if (Date.now() - last > IDLE_MS) {
+        setExpired(true)
+        leave()
+      }
+    }, 30_000)
+    return () => {
+      clearInterval(id)
+      events.forEach((e) => window.removeEventListener(e, bump, { capture: true }))
+    }
+  }, [state, leave])
 
   // Every write goes through here: run it, publish a new content version, refresh this device.
   const save = useCallback(async (fn: () => Promise<unknown>) => {
@@ -45,19 +84,38 @@ export default function Admin() {
     }
   }, [])
 
-  if (!adminConfigured) return <Notice text="Supabase n’est pas configuré (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)." />
-  if (state === 'loading') return null
-  if (state === 'signedOut') return <Login onDone={check} />
-  if (state === 'notAdmin') return <NotAdmin onSignOut={() => (signOut(), setState('signedOut'))} />
+  return (
+    <div dir="ltr" lang="fr" className="text-start">
+      {!adminConfigured ? (
+        <Notice text="Supabase n’est pas configuré (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)." />
+      ) : state === 'loading' ? null : state === 'signedOut' ? (
+        <Login onDone={() => (setExpired(false), check())} expired={expired} />
+      ) : state === 'mfa' ? (
+        <TotpChallenge factorId={factorId} onDone={check} onCancel={leave} />
+      ) : state === 'enroll' ? (
+        <TotpEnroll onDone={check} onCancel={leave} />
+      ) : state === 'notAdmin' ? (
+        <NotAdmin onSignOut={leave} />
+      ) : (
+        <Panel tab={tab} setTab={setTab} save={save} toast={toast} onSignOut={leave} />
+      )}
+    </div>
+  )
+}
 
+function Panel({ tab, setTab, save, toast, onSignOut }: { tab: Tab; setTab: (t: Tab) => void; save: Save; toast: { ok: boolean; text: string } | null; onSignOut: () => void }) {
   return (
     <Stagger className="flex flex-col gap-6">
       <Item>
         <PageHeader
           title="Administration"
-          subtitle={currentEmail()}
+          subtitle={
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck size={14} className="text-success" /> {currentEmail()} · 2FA
+            </span>
+          }
           action={
-            <IconButton label="Se déconnecter" onClick={() => (signOut(), setState('signedOut'))}>
+            <IconButton label="Se déconnecter" onClick={onSignOut}>
               <LogOut size={18} />
             </IconButton>
           }
@@ -105,7 +163,7 @@ type Save = (fn: () => Promise<unknown>) => Promise<boolean>
 
 // ── Auth screens ────────────────────────────────────────────────────────
 
-function Login({ onDone }: { onDone: () => void }) {
+function Login({ onDone, expired }: { onDone: () => void; expired: boolean }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
@@ -118,6 +176,7 @@ function Login({ onDone }: { onDone: () => void }) {
         <h1 className="text-2xl">Administration</h1>
         <p className="text-sm text-ink-2">Connecte-toi avec ton compte Supabase.</p>
       </div>
+      {expired && <p className="rounded-xl border border-warning/40 bg-warning/8 p-3 text-sm text-warning">Session fermée après 15 minutes d’inactivité.</p>}
       <form
         className="card flex flex-col gap-3 p-5"
         onSubmit={async (e) => {
@@ -146,6 +205,125 @@ function Login({ onDone }: { onDone: () => void }) {
           {busy ? 'Connexion…' : 'Se connecter'}
         </Button>
       </form>
+    </div>
+  )
+}
+
+function CodeInput({ onSubmit, busy, error }: { onSubmit: (code: string) => void; busy: boolean; error: string }) {
+  const [code, setCode] = useState('')
+  return (
+    <form
+      className="flex flex-col gap-3"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (code.length === 6) onSubmit(code)
+      }}
+    >
+      <input
+        autoFocus
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        pattern="[0-9]{6}"
+        maxLength={6}
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+        placeholder="123456"
+        aria-label="Code à 6 chiffres"
+        className={cn(inputClass, 'tnum h-14 text-center text-2xl tracking-[0.4em]')}
+      />
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+      <Button type="submit" size="lg" block disabled={busy || code.length !== 6}>
+        {busy ? 'Vérification…' : 'Vérifier'}
+      </Button>
+    </form>
+  )
+}
+
+function useVerify(onDone: () => void) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const run = async (factorId: string, code: string) => {
+    setBusy(true)
+    setError('')
+    try {
+      await verifyTotp(factorId, code)
+      onDone()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  return { busy, error, run }
+}
+
+function TotpChallenge({ factorId, onDone, onCancel }: { factorId: string; onDone: () => void; onCancel: () => void }) {
+  const v = useVerify(onDone)
+  return (
+    <div className="flex min-h-[70vh] flex-col justify-center gap-6">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <span className="grid size-14 place-items-center rounded-2xl bg-accent/12 text-accent">
+          <KeyRound size={26} />
+        </span>
+        <h1 className="text-2xl">Code de sécurité</h1>
+        <p className="max-w-xs text-sm text-ink-2">Ouvre ton application d’authentification et saisis le code SyncroBac à 6 chiffres.</p>
+      </div>
+      <div className="card p-5">
+        <CodeInput busy={v.busy} error={v.error} onSubmit={(code) => v.run(factorId, code)} />
+      </div>
+      <Button variant="ghost" onClick={onCancel}>
+        <LogOut size={16} /> Annuler
+      </Button>
+    </div>
+  )
+}
+
+function TotpEnroll({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
+  const [setup, setSetup] = useState<{ factorId: string; qr: string; secret: string } | null>(null)
+  const [error, setError] = useState('')
+  const v = useVerify(onDone)
+  useEffect(() => {
+    enrollTotp().then(setSetup, (e) => setError((e as Error).message))
+  }, [])
+  return (
+    <div className="flex flex-col gap-5 py-4">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <span className="grid size-14 place-items-center rounded-2xl bg-accent/12 text-accent">
+          <ShieldCheck size={26} />
+        </span>
+        <h1 className="text-2xl">Activer la double authentification</h1>
+        <p className="max-w-xs text-sm text-ink-2">Obligatoire pour l’administration : même avec ton mot de passe, personne ne pourra modifier le contenu sans ton téléphone.</p>
+      </div>
+      <ol className="card flex flex-col gap-4 p-5 text-sm">
+        <li>
+          <span className="font-medium">1.</span> Installe Google Authenticator ou Microsoft Authenticator.
+        </li>
+        <li className="flex flex-col gap-3">
+          <span>
+            <span className="font-medium">2.</span> Scanne ce QR code dans l’application :
+          </span>
+          {setup ? (
+            <>
+              <img src={setup.qr} alt="QR code de double authentification" className="mx-auto size-48 rounded-xl bg-white p-2" />
+              <details className="text-xs text-ink-3">
+                <summary className="min-h-11 cursor-pointer py-3">Impossible de scanner ? Saisir la clé à la main</summary>
+                <code className="block rounded-lg bg-bg p-3 break-all text-ink-2" dir="ltr">{setup.secret}</code>
+              </details>
+            </>
+          ) : (
+            <p className="text-ink-3">{error || 'Préparation…'}</p>
+          )}
+        </li>
+        <li className="flex flex-col gap-3">
+          <span>
+            <span className="font-medium">3.</span> Saisis le code affiché pour confirmer :
+          </span>
+          <CodeInput busy={v.busy || !setup} error={v.error} onSubmit={(code) => setup && v.run(setup.factorId, code)} />
+        </li>
+      </ol>
+      <Button variant="ghost" onClick={onCancel}>
+        <LogOut size={16} /> Annuler
+      </Button>
     </div>
   )
 }
@@ -520,9 +698,46 @@ function GeneralAdmin({ save }: { save: Save }) {
           Republier
         </Button>
       </div>
+      <AuditLog />
       <a href="https://supabase.com/dashboard/project/yboqvzwhqoffhzbxtkkf/editor" target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center gap-2 text-sm text-accent">
         <ExternalLink size={16} /> Ouvrir l’éditeur de tables Supabase
       </a>
+    </div>
+  )
+}
+
+// Read-only journal of every content change (filled by a database trigger, can't be erased).
+function AuditLog() {
+  const { rows, error } = useTable('admin_audit?select=*&order=at.desc&limit=30')
+  const label = (r: Row) => {
+    const row = r.row_new ?? r.row_old ?? {}
+    return row.title ?? row.title_fr ?? row.name_fr ?? row.key ?? row.subject_id ?? row.id ?? ''
+  }
+  return (
+    <div>
+      <SectionTitle>
+        <span className="flex items-center gap-2">
+          <History size={16} /> Journal des modifications
+        </span>
+      </SectionTitle>
+      {error ? (
+        <p className="card p-4 text-xs text-ink-3">Journal indisponible : exécute supabase/security.sql dans Supabase.</p>
+      ) : (
+        <div className="card divide-y divide-line">
+          {rows?.map((r) => (
+            <div key={r.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+              <Chip tone={r.action === 'DELETE' ? 'warning' : r.action === 'INSERT' ? 'success' : 'neutral'}>{r.action}</Chip>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{r.table_name} · {String(label(r))}</span>
+                <span className="block truncate text-xs text-ink-3">
+                  {new Date(r.at).toLocaleString('fr-FR')} · {r.email}
+                </span>
+              </span>
+            </div>
+          ))}
+          {rows?.length === 0 && <p className="p-4 text-sm text-ink-3">Aucune modification pour l’instant.</p>}
+        </div>
+      )}
     </div>
   )
 }

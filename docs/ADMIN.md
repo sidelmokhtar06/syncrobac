@@ -23,16 +23,51 @@ last version they downloaded, and the bundled copy is always there as a fallback
    ```
    Redeploy. The anon key is safe to ship: security rules only allow reading.
 
+## Security setup (do once, after setup.sql)
+
+1. **Run `supabase/security.sql`** in the SQL Editor. From then on, writing content requires
+   an admin **whose session passed two-factor** (authenticator code), and every change is
+   recorded in `admin_audit` (who, when, before/after — cannot be erased, even by an admin).
+2. **Disable public sign-ups**: Authentication → Sign In / Providers → Email → turn off
+   *Allow new users to sign up*. Create accounts yourself from Authentication → Users.
+   (Turn it back on later only when student accounts launch.)
+3. **Create your admin user**: Authentication → Users → Add user → your email + a strong,
+   unique password, tick **Auto Confirm User**. Then:
+   ```sql
+   insert into admins (user_id) select id from auth.users where email = 'YOUR_EMAIL';
+   ```
+4. First login on `/admin` asks you to **scan a QR code** with Google Authenticator or
+   Microsoft Authenticator. Every later login asks for the 6-digit code.
+
+Lost your phone? In the SQL Editor: `delete from auth.mfa_factors where user_id =
+(select id from auth.users where email = 'YOUR_EMAIL');` then log in and scan a new QR code.
+
+### What protects the admin
+
+| Layer | Protection |
+|---|---|
+| Database (RLS) | Only `admins` + aal2 (two-factor) sessions can write; anonymous writes refused |
+| Audit log | Every change to content/admins recorded by trigger, read-only |
+| Session | Tab-only (sessionStorage), auto sign-out after 15 min idle |
+| Site headers | Strict CSP (scripts from our domain only), no framing, HSTS, `/admin` noindex + no-store |
+| Content | Only `https` links accepted (DB constraint + client filter) |
+
+## Reaching the admin from the installed app
+
+Settings → tap **“SyncroBac · version …”** 7 times. This opens `/admin` and adds an
+**Administration** row in Profile on that device. It's only a shortcut: without your password
+and authenticator code nothing can be changed.
+
 ## Everyday edits: the admin page
 
-Open **https://syncrobac.vercel.app/admin** (not linked anywhere in the app) and sign in with
-the Supabase user from step 3. Four tabs:
+Open **https://syncrobac.vercel.app/admin** and sign in (password + authenticator code). Four tabs:
 
 - **Ressources**: add / edit / hide / delete recommended links, optionally for one série.
 - **Matières**: per série, change coefficients, programme status (officiel / provisoire /
   générique), order, add an existing or new subject, remove one.
 - **Chapitres**: per série + subject, rename (FR/AR), set official weeks, reorder, add, delete.
-- **Général**: BAC date (applies to every student who hasn't set their own), content version.
+- **Général**: BAC date (applies to every student who hasn't set their own), content version,
+  and the change journal (audit log).
 
 Every save is published immediately (content version is bumped automatically).
 

@@ -1,4 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router'
+import { enableAdminEntry } from '../lib/adminEntry'
 import { BellRing, Download, Trash2, Upload } from 'lucide-react'
 import { enableNotifications, notifyPermission, notifySupported } from '../lib/pwa'
 import { LanguagesIcon } from '../components/icons/languages'
@@ -17,6 +19,17 @@ export default function Settings() {
   const [perm, setPerm] = useState(notifyPermission())
   const file = useRef<HTMLInputElement>(null)
   const serie = getSerie(s.serie!)
+  const nav = useNavigate()
+  // Tap the version 7 times to reveal the admin entry on this device (Android "developer mode" style).
+  const [taps, setTaps] = useState(0)
+  const tapVersion = () => {
+    const n = taps + 1
+    setTaps(n)
+    if (n >= 7) {
+      enableAdminEntry()
+      nav('/admin')
+    }
+  }
 
   const exportData = async () => {
     const dump = Object.fromEntries(await Promise.all(db.tables.map(async (tb) => [tb.name, await tb.toArray()])))
@@ -180,6 +193,12 @@ export default function Settings() {
             {t('resetAll')}
           </Button>
         </div>
+      </Item>
+      <Item>
+        <button onClick={tapVersion} className="flex min-h-11 w-full items-center justify-center text-xs text-ink-3 select-none" aria-label={`SyncroBac ${__APP_VERSION__}`}>
+          SyncroBac · version {__APP_VERSION__} · {__BUILD_DATE__}
+          {taps >= 3 && taps < 7 && <span className="ms-2 text-ink-2">({7 - taps})</span>}
+        </button>
       </Item>
     </Stagger>
   )

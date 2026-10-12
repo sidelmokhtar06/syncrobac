@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Download, NotebookPen, ShieldCheck } from 'lucide-react'
+import { CloudCheck, CloudUpload, Download, NotebookPen, ShieldCheck } from 'lucide-react'
+import { accountsAvailable, useUser } from '../lib/auth'
 import { adminEntryEnabled } from '../lib/adminEntry'
 import { InstallSheet } from '../components/InstallSheet'
 import { useInstall } from '../lib/pwa'
@@ -25,6 +26,7 @@ export default function Me() {
   const { t, lang } = useT()
   const streak = useStreakInfo()
   const install = useInstall()
+  const user = useUser()
   const [howTo, setHowTo] = useState(false)
   const serie = getSerie(s.serie!)
   const initial = (s.name || serie.id).slice(0, 1).toUpperCase()
@@ -54,6 +56,26 @@ export default function Me() {
           <span className="tnum">{streak.current}</span>
         </Chip>
       </Item>
+
+      {accountsAvailable && (
+        <Item>
+          {user ? (
+            <div className="card">
+              <ListLink to="/account" icon={<CloudCheck size={18} className="text-success" />} label={t('myAccount')} hint={user.email} />
+            </div>
+          ) : (
+            <Link to="/account" className="card flex items-center gap-4 border-accent/40 p-4 transition-colors active:bg-raised">
+              <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent/12 text-accent">
+                <CloudUpload size={22} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">{t('saveProgress')}</span>
+                <span className="block text-sm text-ink-2">{t('benefitSafe')}</span>
+              </span>
+            </Link>
+          )}
+        </Item>
+      )}
 
       <Item>
         <Link to="/coffee" className="card relative flex items-center gap-4 overflow-hidden p-4 transition-colors active:bg-raised">

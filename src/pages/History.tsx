@@ -16,7 +16,7 @@ export default function History() {
 
   const chapterName = (subjectId: string | null, chapterId?: string | null) => {
     if (!subjectId || !chapterId) return null
-    if (chapterId.startsWith('custom-')) return custom.find((c) => `custom-${c.id}` === chapterId)?.title ?? null
+    if (chapterId.startsWith('custom-')) return custom.find((c) => `custom-${c.uid}` === chapterId)?.title ?? null
     return programmeFor(s, subjectId).chapters.find((c) => c.id === chapterId)?.title[lang] ?? null
   }
 

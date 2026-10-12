@@ -7,10 +7,17 @@ import './index.css'
 import './lib/pwa' // capture the install prompt before any page mounts
 import App from './App.tsx'
 import { loadCachedContent, refreshContent } from './lib/contentSync'
+import { handleAuthRedirect } from './lib/auth'
+import { installSyncHooks, startSync } from './lib/sync'
 
 // Admin-managed content: cached copy first (instant, offline), then refresh in the background.
 await loadCachedContent()
 refreshContent()
+
+// Accounts: pick up a Google sign-in redirect, track local changes, sync in the background.
+handleAuthRedirect()
+installSyncHooks()
+startSync()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

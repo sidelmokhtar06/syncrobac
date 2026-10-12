@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { AnimatePresence, m, useScroll, useTransform } from 'motion/react'
-import { ArrowLeft, ArrowRight, BookOpen, Check, Download, ListTodo, Play, RotateCcw, Snowflake, Sparkles, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Check, CloudUpload, Download, ListTodo, Play, RotateCcw, Snowflake, Sparkles, X } from 'lucide-react'
 import { LogoMark, Wordmark } from '../components/Logo'
 import { Mascot } from '../components/Mascot'
 import { InstallSheet } from '../components/InstallSheet'
@@ -17,6 +17,7 @@ import { dateLocale, useStreakInfo, useToday } from '../lib/hooks'
 import { useT, type TKey } from '../lib/i18n'
 import { fmt, remaining, start, useNow } from '../lib/timer'
 import { useInstall } from '../lib/pwa'
+import { accountsAvailable, useUser } from '../lib/auth'
 import { useScrollContainer } from '../lib/scroll'
 
 // Must match <main>'s padding-top in App.tsx.
@@ -54,6 +55,9 @@ export default function Dashboard() {
   const gap = mastery - expected
   const syncState = gap >= 0.05 ? 'ahead' : gap <= -0.05 ? 'behind' : 'inSync'
   const showInstall = !install.installed && !s.dismissed.includes('install')
+  const user = useUser()
+  // Suggest an account once the student has something worth saving.
+  const showAccountNudge = accountsAvailable && !user && streak.weekActive >= 2 && !s.dismissed.includes('account-nudge')
   const [howTo, setHowTo] = useState(false)
 
   const subjects = new Map(subjectsFor(s).map((x) => [x.id, x]))
@@ -122,6 +126,23 @@ export default function Dashboard() {
             </div>
             <Button onClick={() => (install.canPrompt ? install.prompt() : setHowTo(true))}>{t('installBtn')}</Button>
             <button onClick={() => updateSettings({ dismissed: [...s.dismissed, 'install'] })} aria-label={t('dismiss')} className="-me-2 grid size-11 shrink-0 place-items-center text-ink-3">
+              <X size={18} />
+            </button>
+          </m.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAccountNudge && (
+          <m.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: -24 }} transition={{ duration: 0.35, ease: EASE }} className="card flex items-center gap-3 border-accent/40 p-4">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent/12 text-accent">
+              <CloudUpload size={20} />
+            </span>
+            <Link to="/account" className="min-w-0 flex-1">
+              <span className="block text-sm font-medium">{t('saveProgress')}</span>
+              <span className="block text-xs text-ink-2">{t('benefitSafe')}</span>
+            </Link>
+            <button onClick={() => updateSettings({ dismissed: [...s.dismissed, 'account-nudge'] })} aria-label={t('dismiss')} className="-me-2 grid size-11 shrink-0 place-items-center text-ink-3">
               <X size={18} />
             </button>
           </m.div>

@@ -29,7 +29,7 @@ export function useChapters(s: Settings, subjectId: string) {
     source: base.source,
     chapters: [
       ...base.chapters,
-      ...custom.map((c) => ({ id: `custom-${c.id}`, title: { fr: c.title, ar: c.title }, weeks: DEFAULT_WEEKS, custom: true })),
+      ...custom.map((c) => ({ id: `custom-${c.uid}`, title: { fr: c.title, ar: c.title }, weeks: DEFAULT_WEEKS, custom: true })),
     ],
   }
 }
@@ -43,7 +43,7 @@ export async function loadAllChapters(s: Settings): Promise<Map<string, Chapter[
         ...programmeFor(s, sub.id).chapters,
         ...custom
           .filter((c) => c.subjectId === sub.id)
-          .map((c) => ({ id: `custom-${c.id}`, title: { fr: c.title, ar: c.title }, weeks: DEFAULT_WEEKS, custom: true })),
+          .map((c) => ({ id: `custom-${c.uid}`, title: { fr: c.title, ar: c.title }, weeks: DEFAULT_WEEKS, custom: true })),
       ],
     ]),
   )

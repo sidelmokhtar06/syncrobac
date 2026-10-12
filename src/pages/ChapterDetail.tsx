@@ -123,7 +123,7 @@ export default function ChapterDetail() {
             block
             className="text-danger hover:text-danger"
             onClick={async () => {
-              await db.customChapters.delete(Number(chapterId.replace('custom-', '')))
+              await db.customChapters.where('uid').equals(chapterId.replace('custom-', '')).delete()
               await db.chapters.delete(chapterKey(subjectId, chapterId))
               nav(`/subjects/${subjectId}`, { replace: true })
             }}

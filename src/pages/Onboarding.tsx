@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, Bell, BellRing, Check, ChevronDown, Download, Sh
 import { getSerie, listSeries, type SerieId } from '../config/bac'
 import { LogoMark, Wordmark } from '../components/Logo'
 import { LogoHero } from '../components/LogoHero'
+import { AccountLogin } from '../components/AccountLogin'
+import { accountsAvailable } from '../lib/auth'
 import { LanguagesIcon } from '../components/icons/languages'
 import { Burst, EASE, spring } from '../components/motion'
 import { Anim, Button, IconButton, inputClass } from '../components/ui'
@@ -26,6 +28,8 @@ export default function Onboarding() {
   const [goal, setGoal] = useState(4)
   const [seen, setSeen] = useState<Map<string, Set<string>>>(new Map())
   const [finishing, setFinishing] = useState(false)
+  // Returning student: sign in → their synced settings (série…) arrive and the app opens directly.
+  const [loginOpen, setLoginOpen] = useState(false)
 
   // Subjects with a real chapter list (official/draft), heaviest first — the ones worth catching up on.
   const catchup = useMemo(() => {
@@ -62,6 +66,21 @@ export default function Onboarding() {
   const canNext = current !== 'serie' || !!serie
 
   if (finishing) return <Syncing serieLabel={serie ? `${t('serie')} ${serie}` : ''} />
+  if (loginOpen)
+    return (
+      <div className="h-full overflow-y-auto">
+        <div className="mx-auto flex min-h-full max-w-md flex-col gap-6 px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-8">
+          <IconButton label={t('back')} onClick={() => setLoginOpen(false)}>
+            <Bck size={20} />
+          </IconButton>
+          <div>
+            <h1 className="text-2xl">{t('haveAccount')}</h1>
+            <p className="mt-2 text-ink-2">{t('saveProgressSub')}</p>
+          </div>
+          <AccountLogin onDone={() => setLoginOpen(false)} />
+        </div>
+      </div>
+    )
 
   return (
     // The document never scrolls (see index.css), so onboarding scrolls inside its own container.
@@ -113,6 +132,11 @@ export default function Onboarding() {
                 <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6, duration: 0.6, ease: EASE }}>
                   <h1 className="text-2xl">{t('tagline')}</h1>
                   <p className="mx-auto mt-3 max-w-xs text-ink-2">{t('welcomeSub')}</p>
+                  {accountsAvailable && (
+                    <Button variant="ghost" className="mt-4 text-accent" onClick={() => setLoginOpen(true)}>
+                      {t('haveAccount')}
+                    </Button>
+                  )}
                 </m.div>
               </div>
             )}

@@ -32,6 +32,7 @@ const SimulatorPage = lazy(() => import('./pages/SimulatorPage'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Coffee = lazy(() => import('./pages/Coffee'))
 const MistakesPage = lazy(() => import('./pages/MistakesPage'))
+const Account = lazy(() => import('./pages/Account'))
 const Admin = lazy(() => import('./pages/Admin')) // owner-only tool, not linked anywhere
 
 // `owns`: path prefixes that keep the tab highlighted on its sub-pages.
@@ -40,7 +41,7 @@ const TABS = [
   { to: '/subjects', key: 'subjects', Icon: CheckCheckIcon, owns: ['/subjects'] },
   { to: '/focus', key: 'focus', Icon: TimerIcon, owns: ['/focus'] },
   { to: '/resources', key: 'resources', Icon: BookTextIcon, owns: ['/resources'] },
-  { to: '/me', key: 'profile', Icon: UserIcon, owns: ['/me', '/progress', '/simulator', '/settings', '/coffee', '/mistakes'] },
+  { to: '/me', key: 'profile', Icon: UserIcon, owns: ['/me', '/progress', '/simulator', '/settings', '/coffee', '/mistakes', '/account'] },
 ] satisfies { to: string; key: TKey; Icon: unknown; owns: string[] }[]
 
 const tabOf = (path: string) => {
@@ -164,6 +165,7 @@ function Shell() {
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/coffee" element={<Coffee />} />
                   <Route path="/mistakes" element={<MistakesPage />} />
+                  <Route path="/account" element={<Account />} />
                   <Route path="/admin" element={<Admin />} />
                   {/* Old URLs from earlier versions */}
                   <Route path="/checklist" element={<Navigate to="/subjects" replace />} />

@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import { uuid } from './uuid'
 import Dexie, { type EntityTable } from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { defaultBacDate, getSerie, type SerieId, type Subject } from '../config/bac'
@@ -14,6 +15,7 @@ export interface Settings {
   theme: 'system' | 'light' | 'dark'
   bacDate: string
   bacCustom?: boolean // true once the student sets their own date; otherwise follow the admin's
+  syncUpdatedAt?: number // last change to a synced setting (sync merge rule), set by sync hooks
   coeffOverrides: Partial<Record<string, number>>
   durations: Record<TimerMode, number> // minutes
   timer: { mode: TimerMode; endsAt: number | null; remainingMs: number; subjectId: string | null; chapterId?: string | null; goal?: string }
@@ -28,6 +30,8 @@ export interface Settings {
 
 export interface Task {
   id?: number
+  uid?: string // global id for sync (local `id` differs per device)
+  updatedAt?: number
   subjectId: string
   chapterId?: string
   title: string
@@ -37,6 +41,8 @@ export interface Task {
 
 export interface Session {
   id?: number
+  uid?: string
+  updatedAt?: number
   date: string // YYYY-MM-DD local
   minutes: number
   subjectId: string | null
@@ -62,6 +68,8 @@ export interface ChapterState {
 // Chapters a student adds when the programme list is incomplete.
 export interface CustomChapter {
   id?: number
+  uid?: string // chapter id in the app is `custom-${uid}`
+  updatedAt?: number
   subjectId: string
   title: string
   createdAt: number
@@ -84,6 +92,8 @@ export interface DayMissions {
 // One entry of the mistake notebook: what went wrong and the right way, to reread before the BAC.
 export interface Mistake {
   id?: number
+  uid?: string
+  updatedAt?: number
   subjectId: string
   chapterId: string
   text: string
@@ -93,6 +103,8 @@ export interface Mistake {
 
 export interface SavedLink {
   id?: number
+  uid?: string
+  updatedAt?: number
   title: string
   url: string
   category: 'group' | 'site' | 'video' | 'app'
@@ -103,6 +115,7 @@ export interface SavedLink {
 // A day counts toward the streak if the student finished a focus session or a task.
 export interface ActiveDay {
   date: string
+  updatedAt?: number
 }
 
 export const db = new Dexie('syncrobac') as Dexie & {
@@ -116,6 +129,7 @@ export const db = new Dexie('syncrobac') as Dexie & {
   links: EntityTable<SavedLink, 'id'>
   content: EntityTable<{ key: string; bundle: ContentBundle; fetchedAt: number }, 'key'>
   mistakes: EntityTable<Mistake, 'id'>
+  deletions: EntityTable<{ id?: number; collection: string; key: string; at: number }, 'id'>
 }
 
 db.version(1).stores({
@@ -139,6 +153,46 @@ db.version(3).stores({ content: 'key' })
 
 // v4: mistake notebook (carnet d'erreurs), per chapter
 db.version(4).stores({ mistakes: '++id, subjectId, chapterId, createdAt' })
+
+// v5: accounts & sync. Every synced record gets a global `uid` + `updatedAt`; deletions are
+// recorded as tombstones. Custom chapters are referenced by uid (`custom-<uid>`) instead of
+// their per-device numeric id, so references stay valid on every device.
+db.version(5)
+  .stores({
+    tasks: '++id, subjectId, chapterId, uid',
+    sessions: '++id, date, subjectId, uid',
+    customChapters: '++id, subjectId, uid',
+    links: '++id, category, uid',
+    mistakes: '++id, subjectId, chapterId, createdAt, uid',
+    deletions: '++id, collection',
+  })
+  .upgrade(async (tx) => {
+    const now = Date.now()
+    const renamed = new Map<string, string>()
+    await tx.table('customChapters').toCollection().modify((c) => {
+      c.uid ??= uuid()
+      c.updatedAt ??= c.createdAt ?? now
+      renamed.set(`custom-${c.id}`, `custom-${c.uid}`)
+    })
+    const remap = (id?: string | null) => (id && renamed.get(id)) || id
+    for (const name of ['tasks', 'sessions', 'mistakes', 'links']) {
+      await tx.table(name).toCollection().modify((r) => {
+        r.uid ??= uuid()
+        r.updatedAt ??= r.createdAt ?? r.at ?? now
+        if ('chapterId' in r) r.chapterId = remap(r.chapterId)
+      })
+    }
+    for (const st of await tx.table('chapters').toArray()) {
+      const [subject, chapter] = st.key.split('/')
+      const next = remap(chapter)
+      if (next !== chapter) {
+        await tx.table('chapters').delete(st.key)
+        await tx.table('chapters').put({ ...st, key: `${subject}/${next}` })
+      }
+    }
+    await tx.table('days').toCollection().modify((d) => void (d.updatedAt ??= now))
+    await tx.table('missions').clear() // regenerated today; old ones may reference renamed chapters
+  })
 
 const DURATIONS = { pomodoro: 25, short: 5, long: 15, custom: 45 }
 

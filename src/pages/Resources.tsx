@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, m } from 'motion/react'
 import { ExternalLink, Plus, Share2, Trash2, Users } from 'lucide-react'
-import { BookTextIcon } from '../components/icons/book-text'
 import { EASE, Item, Stagger } from '../components/motion'
-import { Anim, Button, Chip, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
+import { Button, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
 import { suggestedLinks } from '../config/links'
 import { cn } from '../lib/cn'
 import { db, useSettings, type SavedLink } from '../lib/db'
@@ -103,15 +102,6 @@ export default function Resources() {
         <p className="text-center text-xs text-ink-3">{t('communitySoon')}</p>
       </div>
 
-      <Item>
-        <SectionTitle action={<Chip>{t('soon')}</Chip>}>{t('annales')}</SectionTitle>
-        <div className="card flex items-center gap-4 p-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent/12 text-accent">
-            <Anim icon={BookTextIcon} size={24} autoplay />
-          </span>
-          <p className="text-sm text-ink-2">{t('annalesSoon')}</p>
-        </div>
-      </Item>
     </Stagger>
   )
 }

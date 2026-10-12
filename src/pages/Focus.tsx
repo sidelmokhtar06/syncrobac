@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { AnimatePresence, m } from 'motion/react'
-import { History as HistoryIcon, Music, Share2, X } from 'lucide-react'
+import { History as HistoryIcon, Music, Target, X } from 'lucide-react'
 import { CloudRainIcon } from '../components/icons/cloud-rain'
 import { CoffeeIcon } from '../components/icons/coffee'
 import { PauseIcon } from '../components/icons/pause'
@@ -9,30 +9,24 @@ import { PlayIcon } from '../components/icons/play'
 import { RotateCCWIcon } from '../components/icons/rotate-ccw'
 import { VolumeIcon } from '../components/icons/volume'
 import { EASE, Item, Stagger } from '../components/motion'
-import { Anim, Button, IconButton, PageHeader, Segmented, Select, SectionTitle } from '../components/ui'
+import { Anim, Button, IconButton, PageHeader, Segmented, Select, SectionTitle, Switch, inputClass } from '../components/ui'
+import { cn } from '../lib/cn'
 import { useAllChapters } from '../lib/curriculum'
 import { subjectsFor, updateSettings, useSettings, type Settings, type TimerMode } from '../lib/db'
-import { useStreak, useTodaySessions } from '../lib/hooks'
-import { quoted, useT } from '../lib/i18n'
+import { useTodaySessions } from '../lib/hooks'
+import { useT } from '../lib/i18n'
 import { AVAILABLE_SOUNDS, playAmbient, stopAmbient } from '../lib/ambient'
-import { shareStatusCard } from '../lib/statusCard'
+import { useWakeLock } from '../lib/wakeLock'
 import { fmt, pause, remaining, setMode, start, useNow } from '../lib/timer'
-
-const QUOTES = {
-  fr: ['Révise malin, réussis vite.', 'Chaque heure compte.', 'Aligne ton énergie.', 'Ne t’arrête pas, synchronise.', 'Le BAC se gagne aujourd’hui.'],
-  ar: ['راجع بذكاء، انجح بسرعة.', 'كل ساعة لها قيمتها.', 'نظّم طاقتك.', 'لا تتوقف، زامِن.', 'الباكالوريا تُكسب اليوم.'],
-}
 
 export default function Focus() {
   const s = useSettings()
   const { t, lang } = useT()
-  const streak = useStreak()
   const sessions = useTodaySessions()
   const running = s.timer.endsAt !== null
   const left = remaining(s.timer, Date.now()) // for labels only; the face ticks on its own
   const total = s.durations[s.timer.mode] * 60_000
-  const [qi, setQi] = useState(() => Math.floor(Date.now() / 86_400_000) % QUOTES.fr.length)
-  const quote = QUOTES[lang][qi]
+  const isFocus = s.timer.mode === 'pomodoro' || s.timer.mode === 'custom'
   const all = useAllChapters(s)
   const chapter = s.timer.subjectId && s.timer.chapterId ? all.get(s.timer.subjectId)?.find((c) => c.id === s.timer.chapterId) : undefined
 
@@ -42,12 +36,12 @@ export default function Focus() {
     return stopAmbient
   }, [running, s.sound])
 
-  useEffect(() => {
-    const id = setInterval(() => setQi((i) => (i + 1) % QUOTES.fr.length), 8000)
-    return () => clearInterval(id)
-  }, [])
+  // Phones dim and lock mid-session; keep the screen on while a session runs (if enabled).
+  useWakeLock(running && s.keepAwake)
 
   const sound = (v: Settings['sound'], node: ReactNode) => ({ value: v, label: t(v), icon: node })
+  // Only rain exists until audio files are added: then a simple switch is enough.
+  const onlyRain = AVAILABLE_SOUNDS.length <= 2
 
   return (
     <Stagger className="flex flex-col gap-6">
@@ -100,6 +94,29 @@ export default function Focus() {
         </div>
       </Item>
 
+      <AnimatePresence initial={false} mode="wait">
+        {isFocus && !running && (
+          <m.label key="goal-input" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="relative block overflow-hidden">
+            <Target size={18} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-3" />
+            <input
+              type="text"
+              value={s.timer.goal ?? ''}
+              maxLength={80}
+              onChange={(e) => updateSettings({ timer: { ...s.timer, goal: e.target.value } })}
+              placeholder={t('sessionGoalPlaceholder')}
+              aria-label={t('sessionGoal')}
+              className={cn(inputClass, 'h-12 w-full ps-10')}
+            />
+          </m.label>
+        )}
+        {running && s.timer.goal?.trim() && (
+          <m.p key="goal-shown" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex items-center justify-center gap-2 text-center text-sm text-ink-2">
+            <Target size={16} className="shrink-0 text-accent" />
+            {s.timer.goal}
+          </m.p>
+        )}
+      </AnimatePresence>
+
       <Item className="flex items-center gap-3">
         <IconButton label={t('reset')} onClick={() => setMode(s, s.timer.mode)} className="size-13">
           <Anim icon={RotateCCWIcon} size={20} play={s.timer.remainingMs} />
@@ -139,6 +156,19 @@ export default function Focus() {
               </button>
             </div>
           )}
+          <div className="flex min-h-15 items-center justify-between gap-4 px-4 py-2">
+            <span className="text-sm text-ink-2">{t('keepAwake')}</span>
+            <Switch checked={s.keepAwake} onChange={(v) => updateSettings({ keepAwake: v })} label={t('keepAwake')} />
+          </div>
+          {onlyRain ? (
+            <div className="flex min-h-15 items-center justify-between gap-4 px-4 py-2">
+              <span className="flex items-center gap-2 text-sm text-ink-2">
+                <Anim icon={CloudRainIcon} size={18} play={s.sound === 'rain'} />
+                {t('rainSound')}
+              </span>
+              <Switch checked={s.sound === 'rain'} onChange={(v) => updateSettings({ sound: v ? 'rain' : 'none' })} label={t('rainSound')} />
+            </div>
+          ) : (
           <div className="px-4 py-3">
             <p className="mb-2 text-sm text-ink-2">{t('ambient')}</p>
             <Segmented<Settings['sound']>
@@ -153,37 +183,10 @@ export default function Focus() {
               ].filter((o) => (AVAILABLE_SOUNDS as readonly string[]).includes(o.value))}
             />
           </div>
+          )}
         </div>
       </Item>
 
-      <Item>
-        <SectionTitle>{t('quoteOfDay')}</SectionTitle>
-        <div className="card p-5">
-          <div className="grid min-h-16 items-center">
-            <AnimatePresence mode="wait">
-              <m.p
-                key={qi + lang}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.4, ease: EASE }}
-                className="text-lg font-medium"
-              >
-                {quoted(quote, lang)}
-              </m.p>
-            </AnimatePresence>
-          </div>
-          <Button
-            variant="secondary"
-            block
-            className="mt-4"
-            onClick={() => shareStatusCard({ quote: quoted(quote, lang), streak, streakLabel: t('daysSynced'), tagline: t('tagline') })}
-          >
-            <Share2 size={18} />
-            {t('shareCard')}
-          </Button>
-        </div>
-      </Item>
     </Stagger>
   )
 }

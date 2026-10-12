@@ -206,3 +206,26 @@ export function ListLink({ to, icon, label, hint, trailing }: { to: string; icon
     </Link>
   )
 }
+
+// On/off switch with a 44px hit area.
+export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className="grid h-11 w-14 shrink-0 place-items-center"
+    >
+      <span className={cn('relative block h-7 w-12 rounded-full transition-colors duration-200', checked ? 'bg-accent' : 'bg-line-strong')}>
+        <m.span
+          className="absolute start-1 top-1 block size-5 rounded-full bg-white shadow"
+          initial={false}
+          animate={{ x: checked ? (document.documentElement.dir === 'rtl' ? -20 : 20) : 0 }}
+          transition={spring}
+        />
+      </span>
+    </button>
+  )
+}

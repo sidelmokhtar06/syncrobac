@@ -6,7 +6,7 @@ import { enableNotifications, notifyPermission, notifySupported } from '../lib/p
 import { LanguagesIcon } from '../components/icons/languages'
 import { Item, Stagger } from '../components/motion'
 import { Anim, Button, Chip, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
-import { getSerie, listSeries } from '../config/bac'
+import { listSeries } from '../config/bac'
 import { cn } from '../lib/cn'
 import { db, today, updateSettings, useSettings, type Lang } from '../lib/db'
 import { useT } from '../lib/i18n'
@@ -18,7 +18,6 @@ export default function Settings() {
   const [msg, setMsg] = useState('')
   const [perm, setPerm] = useState(notifyPermission())
   const file = useRef<HTMLInputElement>(null)
-  const serie = getSerie(s.serie!)
   const nav = useNavigate()
   // Tap the version 7 times to reveal the admin entry on this device (Android "developer mode" style).
   const [taps, setTaps] = useState(0)
@@ -162,22 +161,6 @@ export default function Settings() {
         </div>
       </Item>
 
-      <Item>
-        <SectionTitle>{t('editCoeffs')}</SectionTitle>
-        <div className="card grid grid-cols-2 gap-2 p-4">
-          {serie.subjects.map((x) => (
-            <label key={x.id} className="flex min-h-12 items-center justify-between gap-2 rounded-xl bg-raised ps-3 pe-1.5">
-              <span className="truncate text-sm">{x[lang]}</span>
-              <input
-                type="number" min={1} max={12} inputMode="numeric"
-                value={s.coeffOverrides[x.id] ?? x.coeff}
-                onChange={(e) => +e.target.value > 0 && updateSettings({ coeffOverrides: { ...s.coeffOverrides, [x.id]: +e.target.value } })}
-                className="tnum h-9 w-12 rounded-lg border border-line-strong bg-surface text-center text-sm outline-none focus:border-accent"
-              />
-            </label>
-          ))}
-        </div>
-      </Item>
 
       <Item>
         <SectionTitle>{t('data')}</SectionTitle>

@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Play, Trash2 } from 'lucide-react'
 import { StatusIcon } from '../components/ChapterBits'
 import { TaskList } from '../components/Tasks'
+import { ChapterMistakes } from '../components/Mistakes'
 import { Item, Stagger } from '../components/motion'
 import { Button, PageHeader, Segmented, SectionTitle } from '../components/ui'
 import { chapterKey, setChapter, useChapters } from '../lib/curriculum'
@@ -96,6 +97,11 @@ export default function ChapterDetail() {
         <div className="card px-2 py-2">
           <TaskList tasks={data?.tasks ?? []} subjectId={subjectId} chapterId={chapterId} />
         </div>
+      </Item>
+
+      <Item>
+        <SectionTitle>{t('mistakes')}</SectionTitle>
+        <ChapterMistakes subjectId={subjectId} chapterId={chapterId} />
       </Item>
 
       <Item>

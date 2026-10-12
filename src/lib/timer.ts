@@ -21,20 +21,31 @@ export const setMode = (s: Settings, mode: TimerMode, minutes = s.durations[mode
     timer: { ...s.timer, mode, endsAt: null, remainingMs: minutes * 60_000 },
   })
 
-// Returns true when a focus session (not a break) was completed.
-export async function complete(s: Settings) {
+export interface FinishedSession {
+  sessionId: number
+  subjectId: string | null
+  chapterId: string | null
+  goal?: string
+}
+
+/** Ends the running timer. Returns the logged focus session (for the end-of-session check-in), or null for a break. */
+export async function complete(s: Settings): Promise<FinishedSession | null> {
   const { mode, subjectId } = s.timer
   const chapterId = s.timer.chapterId ?? null
+  const goal = s.timer.goal?.trim() || undefined
   const focus = mode === 'pomodoro' || mode === 'custom'
+  let finished: FinishedSession | null = null
   if (focus) {
-    await db.sessions.add({ date: today(), minutes: s.durations[mode], subjectId, chapterId, at: Date.now() })
+    const sessionId = await db.sessions.add({ date: today(), minutes: s.durations[mode], subjectId, chapterId, goal, at: Date.now() })
     await markActive()
     await completeMissions({ subjectId, chapterId })
+    finished = { sessionId: sessionId as number, subjectId, chapterId, goal }
   }
-  await setMode(s, focus ? 'short' : 'pomodoro')
+  // The goal belongs to one session: clear it once that session ends.
+  await setMode({ ...s, timer: { ...s.timer, goal: focus ? '' : s.timer.goal } }, focus ? 'short' : 'pomodoro')
   navigator.vibrate?.([200, 100, 200])
   beep()
-  return focus
+  return finished
 }
 
 function beep() {

@@ -9,7 +9,7 @@ import { UserIcon } from './components/icons/user'
 import { Anim } from './components/ui'
 import { SettingsContext, useSettings, useSettingsQuery } from './lib/db'
 import { useT, type TKey } from './lib/i18n'
-import { complete, useNow } from './lib/timer'
+import { complete, useNow, type FinishedSession } from './lib/timer'
 import { notify } from './lib/pwa'
 import { ScrollContainer } from './lib/scroll'
 import { content, subscribeContent } from './config/content'
@@ -31,6 +31,7 @@ const Progress = lazy(() => import('./pages/Progress'))
 const SimulatorPage = lazy(() => import('./pages/SimulatorPage'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Coffee = lazy(() => import('./pages/Coffee'))
+const MistakesPage = lazy(() => import('./pages/MistakesPage'))
 const Admin = lazy(() => import('./pages/Admin')) // owner-only tool, not linked anywhere
 
 // `owns`: path prefixes that keep the tab highlighted on its sub-pages.
@@ -39,7 +40,7 @@ const TABS = [
   { to: '/subjects', key: 'subjects', Icon: CheckCheckIcon, owns: ['/subjects'] },
   { to: '/focus', key: 'focus', Icon: TimerIcon, owns: ['/focus'] },
   { to: '/resources', key: 'resources', Icon: BookTextIcon, owns: ['/resources'] },
-  { to: '/me', key: 'profile', Icon: UserIcon, owns: ['/me', '/progress', '/simulator', '/settings', '/coffee'] },
+  { to: '/me', key: 'profile', Icon: UserIcon, owns: ['/me', '/progress', '/simulator', '/settings', '/coffee', '/mistakes'] },
 ] satisfies { to: string; key: TKey; Icon: unknown; owns: string[] }[]
 
 const tabOf = (path: string) => {
@@ -113,9 +114,9 @@ function Shell() {
   const { t } = useT()
   const loc = useLocation()
   const mainRef = useRef<HTMLElement>(null)
-  const [celebrate, setCelebrate] = useState(false)
-  const closeCelebrate = useCallback(() => setCelebrate(false), [])
-  const openCelebrate = useCallback(() => setCelebrate(true), [])
+  // The just-finished focus session, shown in the celebration + check-in sheet.
+  const [finished, setFinished] = useState<FinishedSession | null>(null)
+  const closeCelebrate = useCallback(() => setFinished(null), [])
 
   // Direction-aware page slide (mirrored in RTL): across tabs by tab order, within a tab by depth.
   const idx = tabOf(loc.pathname)
@@ -162,6 +163,7 @@ function Shell() {
                   <Route path="/simulator" element={<SimulatorPage />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/coffee" element={<Coffee />} />
+                  <Route path="/mistakes" element={<MistakesPage />} />
                   <Route path="/admin" element={<Admin />} />
                   {/* Old URLs from earlier versions */}
                   <Route path="/checklist" element={<Navigate to="/subjects" replace />} />
@@ -196,15 +198,15 @@ function Shell() {
       </nav>
       )}
 
-      <TimerWatcher onFocusDone={openCelebrate} />
-      <Celebration open={celebrate} onClose={closeCelebrate} />
+      <TimerWatcher onFocusDone={setFinished} />
+      <Celebration session={finished} onClose={closeCelebrate} />
     </div>
   )
 }
 
 // Completes the running session whichever page is open. Isolated in its own component
 // so its 1-second tick re-renders only this (renders nothing), not the whole app.
-function TimerWatcher({ onFocusDone }: { onFocusDone: () => void }) {
+function TimerWatcher({ onFocusDone }: { onFocusDone: (s: FinishedSession) => void }) {
   const s = useSettings()
   const { t } = useT()
   const now = useNow()
@@ -222,9 +224,9 @@ function TimerWatcher({ onFocusDone }: { onFocusDone: () => void }) {
     if (!s.timer.endsAt || s.timer.endsAt > Date.now() || completing.current) return
     completing.current = true
     complete(s)
-      .then((focus) => {
-        notify(focus ? t('sessionDone') : t('breakDone'), focus ? t('sessionDoneSub') : t('breakDoneSub'))
-        if (focus) onFocusDone()
+      .then((finished) => {
+        notify(finished ? t('sessionDone') : t('breakDone'), finished ? t('sessionDoneSub') : t('breakDoneSub'))
+        if (finished) onFocusDone(finished)
       })
       .finally(() => (completing.current = false))
   }, [now, s, t, onFocusDone])

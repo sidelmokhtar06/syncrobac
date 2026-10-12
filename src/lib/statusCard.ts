@@ -1,10 +1,20 @@
-// Draws a 1080x1920 WhatsApp status card on a canvas and opens the native share
-// sheet (falls back to a download). Lighter and more reliable than html2canvas.
+// Draws the weekly recap as a 1080x1920 WhatsApp status image on a canvas and opens the
+// native share sheet (falls back to a download). Always dark: it's an image to share,
+// independent of the app theme.
 
 const FONT = '"Readex Pro Variable", system-ui, sans-serif'
 
-export async function shareStatusCard(opts: { quote: string; streak: number; streakLabel: string; tagline: string }) {
-  await Promise.all([document.fonts.load(`700 84px ${FONT}`, opts.quote), document.fonts.load(`500 44px ${FONT}`, opts.tagline)])
+export interface WeeklyCard {
+  title: string // "Ta semaine"
+  hours: string // "6.5"
+  hoursLabel: string // "h de focus"
+  stats: { value: string; label: string }[] // 3 columns
+  footnote?: string // e.g. most-studied subject
+  tagline: string
+}
+
+export async function shareWeeklyCard(card: WeeklyCard) {
+  await Promise.all([document.fonts.load(`700 84px ${FONT}`, card.title), document.fonts.load(`500 44px ${FONT}`, card.tagline)])
   const W = 1080
   const H = 1920
   const c = document.createElement('canvas')
@@ -17,13 +27,13 @@ export async function shareStatusCard(opts: { quote: string; streak: number; str
   bg.addColorStop(1, '#12161D')
   g.fillStyle = bg
   g.fillRect(0, 0, W, H)
-
-  const glow = g.createRadialGradient(W / 2, H * 0.42, 50, W / 2, H * 0.42, 700)
-  glow.addColorStop(0, 'rgba(34,193,214,0.25)')
+  const glow = g.createRadialGradient(W / 2, H * 0.4, 50, W / 2, H * 0.4, 700)
+  glow.addColorStop(0, 'rgba(34,193,214,0.22)')
   glow.addColorStop(1, 'rgba(34,193,214,0)')
   g.fillStyle = glow
   g.fillRect(0, 0, W, H)
 
+  // Wordmark (always LTR Latin)
   g.textAlign = 'center'
   g.font = `700 72px ${FONT}`
   g.fillStyle = '#fff'
@@ -31,37 +41,48 @@ export async function shareStatusCard(opts: { quote: string; streak: number; str
   g.fillStyle = '#22C1D6'
   g.fillText('BAC', W / 2 + 175, 220)
 
-  // Wordmark above is always LTR; quote and labels follow the UI language.
+  // Everything else follows the UI language.
   g.direction = document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr'
-  g.font = `700 84px ${FONT}`
+  g.font = `600 64px ${FONT}`
   g.fillStyle = '#22C1D6'
-  wrap(g, opts.quote, W / 2, H * 0.4, W - 160, 110)
+  g.fillText(card.title, W / 2, 440)
 
-  // Streak: lucide "flame" path drawn on canvas (no emoji — renders identically on every phone).
-  g.save()
-  g.translate(W / 2 - 230, H * 0.68 - 150)
-  g.scale(7, 7)
-  g.strokeStyle = '#F0A645'
-  g.lineWidth = 2
-  g.lineCap = 'round'
-  g.lineJoin = 'round'
-  g.stroke(new Path2D('M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z'))
-  g.restore()
-  g.font = `600 160px ${FONT}`
+  g.font = `700 280px ${FONT}`
   g.fillStyle = '#E8ECF1'
-  g.textAlign = 'left'
-  g.fillText(String(opts.streak), W / 2 - 20, H * 0.68)
-  g.textAlign = 'center'
-  g.font = `600 56px ${FONT}`
-  g.fillStyle = '#3CCB8C'
-  g.fillText(opts.streakLabel, W / 2, H * 0.68 + 90)
+  g.fillText(card.hours, W / 2, 800)
+  g.font = `500 56px ${FONT}`
+  g.fillStyle = '#A3ADBB'
+  g.fillText(card.hoursLabel, W / 2, 900)
+
+  // Three stat columns on a rounded panel
+  const top = 1040
+  g.fillStyle = 'rgba(255,255,255,0.05)'
+  g.beginPath()
+  g.roundRect(80, top, W - 160, 300, 40)
+  g.fill()
+  const cols = card.stats.slice(0, 3)
+  cols.forEach((st, i) => {
+    const x = ((i + 0.5) / cols.length) * (W - 160) + 80
+    g.font = `700 104px ${FONT}`
+    g.fillStyle = i === 2 ? '#F0A645' : '#3CCB8C'
+    g.fillText(st.value, x, top + 160)
+    g.font = `500 38px ${FONT}`
+    g.fillStyle = '#A3ADBB'
+    g.fillText(st.label, x, top + 230)
+  })
+
+  if (card.footnote) {
+    g.font = `500 44px ${FONT}`
+    g.fillStyle = '#E8ECF1'
+    g.fillText(card.footnote, W / 2, 1460)
+  }
 
   g.font = `500 44px ${FONT}`
   g.fillStyle = '#788293'
-  g.fillText(opts.tagline, W / 2, H - 160)
+  g.fillText(card.tagline, W / 2, H - 160)
 
   const blob = await new Promise<Blob>((r) => c.toBlob((b) => r(b!), 'image/png'))
-  const file = new File([blob], 'syncrobac-status.png', { type: 'image/png' })
+  const file = new File([blob], 'syncrobac-semaine.png', { type: 'image/png' })
   if (navigator.canShare?.({ files: [file] })) {
     await navigator.share({ files: [file] }).catch(() => {})
   } else {
@@ -70,19 +91,4 @@ export async function shareStatusCard(opts: { quote: string; streak: number; str
     a.download = file.name
     a.click()
   }
-}
-
-function wrap(g: CanvasRenderingContext2D, text: string, x: number, y: number, max: number, lh: number) {
-  const words = text.split(' ')
-  const lines: string[] = []
-  let line = ''
-  for (const w of words) {
-    const test = line ? `${line} ${w}` : w
-    if (g.measureText(test).width > max && line) {
-      lines.push(line)
-      line = w
-    } else line = test
-  }
-  lines.push(line)
-  lines.forEach((l, i) => g.fillText(l, x, y + (i - (lines.length - 1) / 2) * lh))
 }

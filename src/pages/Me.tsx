@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { Download, FileText, Headphones, ShieldCheck, Users, Zap } from 'lucide-react'
+import { Download, NotebookPen, ShieldCheck } from 'lucide-react'
 import { adminEntryEnabled } from '../lib/adminEntry'
 import { InstallSheet } from '../components/InstallSheet'
 import { useInstall } from '../lib/pwa'
-import { BotIcon } from '../components/icons/bot'
 import { CalendarCheckIcon } from '../components/icons/calendar-check'
 import { CoffeeIcon } from '../components/icons/coffee'
 import { ChartColumnIncreasingIcon } from '../components/icons/chart-column-increasing'
@@ -19,12 +18,6 @@ import { useSettings } from '../lib/db'
 import { useStreakInfo } from '../lib/hooks'
 import { useT } from '../lib/i18n'
 
-const SOON = [
-  { id: 'leagues', Icon: Users, fr: 'Ligues et sessions live', ar: 'الدوريات والجلسات المباشرة' },
-  { id: 'exams', Icon: FileText, fr: 'Examens modèles', ar: 'امتحانات نموذجية' },
-  { id: 'quiz', Icon: Zap, fr: 'Quiz éclair', ar: 'اختبارات سريعة' },
-  { id: 'audio', Icon: Headphones, fr: 'Résumés audio', ar: 'ملخصات صوتية' },
-]
 
 // Profile hub: identity + entry points. Each tool lives on its own page.
 export default function Me() {
@@ -83,6 +76,7 @@ export default function Me() {
           <ListLink to="/progress" icon={<Anim icon={ChartColumnIncreasingIcon} size={18} autoplay />} label={t('progress')} hint={`${streak.weekActive} / ${s.weeklyGoal} ${t('weekGoal')}`} />
           <ListLink to="/plan" icon={<Anim icon={CalendarCheckIcon} size={18} />} label={t('plan')} />
           <ListLink to="/simulator" icon={<Anim icon={GaugeIcon} size={18} />} label={t('simulator')} />
+          <ListLink to="/mistakes" icon={<NotebookPen size={18} />} label={t('mistakes')} hint={t('mistakesSub')} />
           <ListLink to="/focus/history" icon={<Anim icon={TimerIcon} size={18} />} label={t('history')} />
         </div>
       </Item>
@@ -106,27 +100,6 @@ export default function Me() {
         </div>
       </Item>
 
-      <Item>
-        <SectionTitle>{t('soon')}</SectionTitle>
-        <div className="card divide-y divide-line">
-          {SOON.map(({ id, Icon, ...x }) => (
-            <div key={id} className="flex min-h-14 items-center gap-3 px-4">
-              <span className="grid size-9 place-items-center rounded-lg bg-raised text-ink-3">
-                <Icon size={18} />
-              </span>
-              <span className="flex-1 text-sm text-ink-2">{x[lang]}</span>
-              <Chip>{t('soon')}</Chip>
-            </div>
-          ))}
-          <div className="flex min-h-14 items-center gap-3 px-4">
-            <span className="grid size-9 place-items-center rounded-lg bg-raised text-ink-3">
-              <Anim icon={BotIcon} size={18} autoplay />
-            </span>
-            <span className="flex-1 text-sm text-ink-2">{t('aiCoach')}</span>
-            <Chip>{t('soon')}</Chip>
-          </div>
-        </div>
-      </Item>
       <InstallSheet open={howTo} onClose={() => setHowTo(false)} ios={install.ios} />
     </Stagger>
   )

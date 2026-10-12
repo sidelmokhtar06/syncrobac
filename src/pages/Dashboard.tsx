@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, BookOpen, Check, Download, ListTodo, Play, Rotat
 import { LogoMark, Wordmark } from '../components/Logo'
 import { Mascot } from '../components/Mascot'
 import { InstallSheet } from '../components/InstallSheet'
+import { WeeklyRecap } from '../components/WeeklyRecap'
 import { FlameIcon } from '../components/icons/flame'
 import { GraduationCapIcon } from '../components/icons/graduation-cap'
 import { Burst, CountUp, EASE, Item, Rolling, Stagger, spring } from '../components/motion'
@@ -126,6 +127,8 @@ export default function Dashboard() {
           </m.div>
         )}
       </AnimatePresence>
+
+      <WeeklyRecap dismissible />
 
       {running && (
         <Item>

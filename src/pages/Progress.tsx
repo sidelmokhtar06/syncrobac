@@ -1,12 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { m } from 'motion/react'
-import { Lock, Snowflake } from 'lucide-react'
+import { CalendarDays, CalendarRange, Flame, Snowflake, Trophy } from 'lucide-react'
 import WeekChart from '../components/WeekChart'
-import { BrainIcon } from '../components/icons/brain'
-import { CalendarCheckIcon } from '../components/icons/calendar-check'
-import { ChartColumnIncreasingIcon } from '../components/icons/chart-column-increasing'
+import { WeeklyRecap } from '../components/WeeklyRecap'
 import { FlameIcon } from '../components/icons/flame'
-import { RocketIcon } from '../components/icons/rocket'
 import { CountUp, EASE, Item, Stagger, spring } from '../components/motion'
 import { Anim, Chip, PageHeader, SectionTitle } from '../components/ui'
 import { cn } from '../lib/cn'
@@ -26,20 +23,25 @@ export default function Progress() {
   const streak = streakInfo(data.days)
   const minutes = data.sessions.reduce((a, x) => a + x.minutes, 0)
   const best = Math.max(bestStreak(data.days), streak.current)
-  const perDay = data.sessions.reduce<Record<string, number>>((a, x) => ({ ...a, [x.date]: (a[x.date] ?? 0) + 1 }), {})
+  // Records: minutes per day and per Monday-starting week.
+  const minutesPerDay = data.sessions.reduce<Record<string, number>>((a, x) => ({ ...a, [x.date]: (a[x.date] ?? 0) + x.minutes }), {})
+  const minutesPerWeek = Object.entries(minutesPerDay).reduce<Record<string, number>>((a, [date, min]) => {
+    const d = new Date(date + 'T12:00:00')
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+    const k = today(d)
+    return { ...a, [k]: (a[k] ?? 0) + min }
+  }, {})
   const subjects = subjectsFor(s)
   const bySubject = subjects
     .map((sub) => ({ sub, min: data.sessions.filter((x) => x.subjectId === sub.id).reduce((a, x) => a + x.minutes, 0) }))
     .filter((x) => x.min > 0)
     .sort((a, b) => b.min - a.min)
   const maxMin = Math.max(1, ...bySubject.map((x) => x.min))
-  const mastered = data.chapters.filter((c) => c.status === 'done' && c.subjectId === subjects[0]?.id).length
-
-  const badges = [
-    { id: 'first', fr: 'Premier sync', ar: 'أول جلسة', ok: data.sessions.length >= 1, icon: RocketIcon },
-    { id: '7day', fr: '7 jours', ar: '7 أيام', ok: best >= 7, icon: CalendarCheckIcon },
-    { id: 'coeff', fr: 'Optimiseur', ar: 'محسّن المعاملات', ok: mastered >= 3, icon: ChartColumnIncreasingIcon },
-    { id: 'flow', fr: 'Flow', ar: 'حالة التدفق', ok: Object.values(perDay).some((n) => n >= 4), icon: BrainIcon },
+  const records = [
+    { key: 'bestDay' as const, Icon: CalendarDays, value: Math.max(0, ...Object.values(minutesPerDay)), unit: t('minutes') },
+    { key: 'bestWeek' as const, Icon: CalendarRange, value: Math.max(0, ...Object.values(minutesPerWeek)), unit: t('minutes') },
+    { key: 'longestStreak' as const, Icon: Flame, value: best, unit: t('days') },
+    { key: 'totalMastered' as const, Icon: Trophy, value: data.chapters.filter((c) => c.status === 'done').length, unit: '' },
   ]
 
   return (
@@ -117,26 +119,28 @@ export default function Progress() {
       </Item>
 
       <Item>
-        <SectionTitle>{t('badges')}</SectionTitle>
-        <div className="card grid grid-cols-4 gap-2 p-4">
-          {badges.map((b, i) => (
-            <div key={b.id} className="flex flex-col items-center gap-2 text-center">
-              <m.span
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ ...spring, delay: 0.1 + i * 0.06 }}
-                className={cn('relative grid size-14 place-items-center rounded-full border', b.ok ? 'border-accent/40 bg-accent/12 text-accent' : 'border-line bg-raised text-ink-3')}
-                aria-label={`${b[lang]} · ${b.ok ? t('unlocked') : t('locked')}`}
-              >
-                <Anim icon={b.icon} size={24} autoplay={b.ok} />
-                {!b.ok && (
-                  <span className="absolute -end-0.5 -bottom-0.5 grid size-5 place-items-center rounded-full border border-line bg-surface">
-                    <Lock size={11} />
-                  </span>
-                )}
-              </m.span>
-              <span className={cn('text-xs leading-tight', b.ok ? 'text-ink' : 'text-ink-3')}>{b[lang]}</span>
-            </div>
+        <WeeklyRecap />
+      </Item>
+
+      <Item>
+        <SectionTitle>{t('records')}</SectionTitle>
+        <div className="grid grid-cols-2 gap-3">
+          {records.map(({ key, Icon, value, unit }, i) => (
+            <m.div
+              key={key}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...spring, delay: 0.1 + i * 0.06 }}
+              className="card flex flex-col gap-2 p-4"
+            >
+              <span className={cn('grid size-9 place-items-center rounded-lg', value ? 'bg-accent/12 text-accent' : 'bg-raised text-ink-3')}>
+                <Icon size={18} />
+              </span>
+              <p className="text-2xl font-semibold">
+                <CountUp to={value} /> <span className="text-sm font-normal text-ink-2">{unit}</span>
+              </p>
+              <p className="text-xs text-ink-2">{t(key)}</p>
+            </m.div>
           ))}
         </div>
       </Item>

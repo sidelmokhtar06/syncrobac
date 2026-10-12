@@ -16,8 +16,9 @@ export interface Settings {
   bacCustom?: boolean // true once the student sets their own date; otherwise follow the admin's
   coeffOverrides: Partial<Record<string, number>>
   durations: Record<TimerMode, number> // minutes
-  timer: { mode: TimerMode; endsAt: number | null; remainingMs: number; subjectId: string | null; chapterId?: string | null }
+  timer: { mode: TimerMode; endsAt: number | null; remainingMs: number; subjectId: string | null; chapterId?: string | null; goal?: string }
   sound: 'none' | 'rain' | 'atay' | 'lofi'
+  keepAwake: boolean // keep the screen on during a focus session
   dailyGoal: number // Pomodoros per day
   weeklyGoal: number // active days per week (gentle streak)
   name: string
@@ -41,6 +42,8 @@ export interface Session {
   subjectId: string | null
   chapterId?: string | null
   at?: number // completion timestamp
+  goal?: string // what the student set out to do
+  result?: Confidence // end-of-session check-in
 }
 
 export type ChapterStatus = 'todo' | 'learning' | 'done'
@@ -78,6 +81,16 @@ export interface DayMissions {
   items: Mission[]
 }
 
+// One entry of the mistake notebook: what went wrong and the right way, to reread before the BAC.
+export interface Mistake {
+  id?: number
+  subjectId: string
+  chapterId: string
+  text: string
+  fix?: string
+  createdAt: number
+}
+
 export interface SavedLink {
   id?: number
   title: string
@@ -102,6 +115,7 @@ export const db = new Dexie('syncrobac') as Dexie & {
   missions: EntityTable<DayMissions, 'date'>
   links: EntityTable<SavedLink, 'id'>
   content: EntityTable<{ key: string; bundle: ContentBundle; fetchedAt: number }, 'key'>
+  mistakes: EntityTable<Mistake, 'id'>
 }
 
 db.version(1).stores({
@@ -123,6 +137,9 @@ db.version(2).stores({
 // v3: cached copy of the admin-managed content bundle (see config/content.ts)
 db.version(3).stores({ content: 'key' })
 
+// v4: mistake notebook (carnet d'erreurs), per chapter
+db.version(4).stores({ mistakes: '++id, subjectId, chapterId, createdAt' })
+
 const DURATIONS = { pomodoro: 25, short: 5, long: 15, custom: 45 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -135,6 +152,7 @@ export const DEFAULT_SETTINGS: Settings = {
   durations: DURATIONS,
   timer: { mode: 'pomodoro', endsAt: null, remainingMs: DURATIONS.pomodoro * 60_000, subjectId: null, chapterId: null },
   sound: 'none',
+  keepAwake: true,
   dailyGoal: 4,
   weeklyGoal: 5,
   name: '',
@@ -166,7 +184,7 @@ export const markActive = () => db.days.put({ date: today() })
 export const subjectsFor = (s: Settings): Subject[] =>
   s.serie
     ? getSerie(s.serie)
-        .subjects.map((sub) => ({ ...sub, coeff: s.coeffOverrides[sub.id] ?? sub.coeff }))
+        .subjects.slice()
         .sort((a, b) => b.coeff - a.coeff)
     : []
 

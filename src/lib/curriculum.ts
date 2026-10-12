@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { DEFAULT_WEEKS, programme, type Source } from '../config/programme'
+import { content } from '../config/content'
 import type { Subject } from '../config/bac'
 import { db, subjectsFor, today, type ChapterState, type ChapterStatus, type DayMissions, type Lang, type Mission, type Settings, type Task } from './db'
 
@@ -49,7 +50,8 @@ export async function loadAllChapters(s: Settings): Promise<Map<string, Chapter[
 }
 
 export const useAllChapters = (s: Settings) =>
-  useLiveQuery(() => loadAllChapters(s), [s.serie, JSON.stringify(s.coeffOverrides)], new Map<string, Chapter[]>())
+  // Re-load when the série changes or new admin content arrives (chapters/coefficients edited remotely).
+  useLiveQuery(() => loadAllChapters(s), [s.serie, content().version, content().updatedAt], new Map<string, Chapter[]>())
 
 export const useChapterStates = () =>
   useLiveQuery(async () => new Map((await db.chapters.toArray()).map((c) => [c.key, c])), [], new Map<string, ChapterState>())

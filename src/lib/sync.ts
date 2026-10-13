@@ -104,10 +104,12 @@ async function push(meta: ReturnType<typeof readMeta>) {
     for (const r of await table(c).toArray()) if (stamp(c, r) > meta.lastPushAt) records.push(serialize(c, r))
   }
   const deletions = await db.deletions.toArray()
-  const all = [
-    ...records,
-    ...deletions.map((d) => ({ collection: d.collection, id: d.key, data: null, deleted: true, client_updated_at: d.at })),
-  ]
+  // A record deleted then written again (e.g. restoring a backup = clear + put) is not deleted.
+  const tombstones = []
+  for (const d of deletions) {
+    if (!(await findLocal(d.collection as Collection, d.key))) tombstones.push({ collection: d.collection, id: d.key, data: null, deleted: true, client_updated_at: d.at })
+  }
+  const all = [...records, ...tombstones]
   for (let i = 0; i < all.length; i += 500) {
     await restCall('rpc/sync_push', { method: 'POST', body: JSON.stringify({ records: all.slice(i, i + 500) }) })
   }
@@ -159,13 +161,18 @@ async function apply(rows: RemoteRow[]) {
   })
 }
 
+// Pulls overlap the previous one by 2 minutes: two pushes landing at the same moment can commit
+// out of timestamp order, and re-applying a row is harmless (same or older stamps are skipped).
+const PULL_OVERLAP_MS = 2 * 60_000
+
 async function pull(meta: ReturnType<typeof readMeta>) {
+  let since = new Date(Math.max(0, Date.parse(meta.lastPull) - PULL_OVERLAP_MS)).toISOString()
   for (;;) {
     const rows = await restCall<RemoteRow[]>(
-      `user_records?select=collection,id,data,deleted,client_updated_at,updated_at&updated_at=gt.${encodeURIComponent(meta.lastPull)}&order=updated_at.asc&limit=1000`,
+      `user_records?select=collection,id,data,deleted,client_updated_at,updated_at&updated_at=gt.${encodeURIComponent(since)}&order=updated_at.asc&limit=1000`,
     )
     await apply(rows)
-    if (rows.length) meta.lastPull = rows[rows.length - 1].updated_at
+    if (rows.length) meta.lastPull = since = rows[rows.length - 1].updated_at
     if (rows.length < 1000) break
   }
 }

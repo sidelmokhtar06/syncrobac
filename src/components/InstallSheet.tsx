@@ -29,7 +29,7 @@ export function InstallSheet({ open, onClose, ios }: { open: boolean; onClose: (
             role="dialog"
             aria-modal="true"
             aria-label={t('installTitle')}
-            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-3xl border-t border-line-strong bg-surface px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-3xl md:bottom-6 md:rounded-3xl md:border border-t border-line-strong bg-surface px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}

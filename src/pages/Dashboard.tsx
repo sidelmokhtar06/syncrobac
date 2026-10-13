@@ -74,11 +74,11 @@ export default function Dashboard() {
       {/* Sticky bar spans <main>'s top padding (safe area included) so nothing peeks above it. */}
       <m.div
         style={{ top: `calc(-1 * ${TOP_PAD})`, marginTop: `calc(-1 * ${TOP_PAD})`, paddingTop: TOP_PAD }}
-        className="sticky z-30 -mx-5 flex items-center justify-between px-5 pb-2"
+        className="sticky z-30 -mx-5 flex items-center justify-between px-5 pb-2 md:static md:mx-0 md:mt-0! md:px-0 md:pt-0!"
       >
         {/* Theme-aware background that fades in with scroll */}
-        <m.span aria-hidden style={{ opacity: barOpacity }} className="absolute inset-0 -z-10 border-b border-line bg-bg" />
-        <div className="flex items-center gap-2">
+        <m.span aria-hidden style={{ opacity: barOpacity }} className="absolute inset-0 -z-10 border-b border-line bg-bg md:hidden" />
+        <div className="flex items-center gap-2 md:invisible">
           <LogoMark animated className="h-7 w-auto" />
           <Wordmark animated delay={0.4} className="text-base" />
         </div>

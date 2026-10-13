@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CloudCheck, CloudUpload, Download, NotebookPen, ShieldCheck } from 'lucide-react'
+import { CloudCheck, CloudUpload, Download, MessageSquareText, NotebookPen, ShieldCheck } from 'lucide-react'
 import { accountsAvailable, useUser } from '../lib/auth'
 import { adminEntryEnabled } from '../lib/adminEntry'
 import { InstallSheet } from '../components/InstallSheet'
@@ -18,6 +18,7 @@ import { getSerie } from '../config/bac'
 import { useSettings } from '../lib/db'
 import { useStreakInfo } from '../lib/hooks'
 import { useT } from '../lib/i18n'
+import { insightsAvailable } from '../lib/insights'
 
 
 // Profile hub: identity + entry points. Each tool lives on its own page.
@@ -107,6 +108,7 @@ export default function Me() {
         <SectionTitle>{t('account')}</SectionTitle>
         <div className="card divide-y divide-line">
           <ListLink to="/settings" icon={<Anim icon={SettingsIcon} size={18} />} label={t('settings')} hint={t('dataExplain')} />
+          {insightsAvailable && <ListLink to="/feedback" icon={<MessageSquareText size={18} />} label={t('feedback')} hint={t('feedbackSub')} />}
           {adminEntryEnabled() && <ListLink to="/admin" icon={<ShieldCheck size={18} />} label="Administration" hint="Accès protégé · 2FA" />}
           {!install.installed && (
             <button onClick={() => (install.canPrompt ? install.prompt() : setHowTo(true))} className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-start transition-colors active:bg-raised">

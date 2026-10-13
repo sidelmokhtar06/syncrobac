@@ -66,7 +66,7 @@ export default function Resources() {
         <Segmented<Cat> id="link-cat" value={cat} onChange={setCat} options={CATS.map((c) => ({ value: c.value, label: t(c.key) }))} />
       </Item>
 
-      <div className="-mt-2 flex flex-col gap-3">
+      <div className="-mt-2 grid gap-3 md:grid-cols-2">
         <AnimatePresence initial={false} mode="popLayout">
           {items.map((l) => (
             <m.div key={(l.mine ? 'm' : 's') + (l.id ?? l.url)} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }} className="card flex items-center gap-3 p-3">

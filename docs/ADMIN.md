@@ -60,16 +60,29 @@ and authenticator code nothing can be changed.
 
 ## Everyday edits: the admin page
 
-Open **https://syncrobac.vercel.app/admin** and sign in (password + authenticator code). Four tabs:
+Open **https://syncrobac.vercel.app/admin** and sign in (password + authenticator code). On a
+laptop the sections are listed on the left; on a phone they scroll horizontally. Sections:
 
 - **Ressources**: add / edit / hide / delete recommended links, optionally for one série.
 - **Matières**: per série, change coefficients, programme status (officiel / provisoire /
   générique), order, add an existing or new subject, remove one.
 - **Chapitres**: per série + subject, rename (FR/AR), set official weeks, reorder, add, delete.
+- **Retours**: messages students send from Profil → Donner mon avis (mark as treated, delete;
+  a WhatsApp number or email opens directly), and crash reports grouped by error with the page,
+  app version and technical trace.
+- **Statistiques**: anonymous usage: active phones per day, new installs, which features are
+  used, séries and languages. No names or emails: each phone has a random id, and students can
+  turn it off in Réglages.
 - **Général**: BAC date (applies to every student who hasn't set their own), content version,
   and the change journal (audit log).
 
 Every save is published immediately (content version is bumped automatically).
+
+### Turning on Retours and Statistiques (once)
+
+Supabase → SQL Editor → run `supabase/insights.sql`. Until then those two sections say
+"Indisponible". Anyone can send feedback or crash reports, only you (admin + two-factor) can read
+them; a flood guard caps inserts per hour, and crash reports are dropped after 90 days.
 
 ## Advanced: Table Editor (like a spreadsheet)
 

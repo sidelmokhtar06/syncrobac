@@ -13,6 +13,19 @@ pnpm dev        # http://localhost:5173
 pnpm build && pnpm preview   # test the PWA / service worker
 ```
 
+## Tests
+
+```sh
+pnpm test:e2e   # app in a real browser (phone, tablet, desktop), Supabase faked: onboarding,
+                # focus check-in, mistake notebook, two-phone sync, backup restore, feedback,
+                # crash reports, anonymous stats, layouts. First time without system Chromium:
+                # pnpm exec playwright install chromium
+pnpm test:sql   # runs every supabase/*.sql on a throwaway Postgres (Docker) and checks the
+                # security rules: students only see their own data, only the admin with
+                # two-factor reads feedback and stats, etc.
+pnpm test       # both
+```
+
 ## Stack
 
 React 19 · Vite · TypeScript · Tailwind v4 · react-router · Dexie (IndexedDB) · vite-plugin-pwa ·
@@ -31,6 +44,10 @@ See [DESIGN.md](DESIGN.md) for colors, type, spacing and component rules.
 | `/focus` · `/focus/history` | Timer · session log |
 | `/resources` | Useful links & study groups (community sharing with accounts) |
 | `/me` · `/progress` · `/simulator` · `/settings` | Profile hub · stats & streak · score simulator · settings & backup |
+| `/account` · `/feedback` · `/mistakes` · `/coffee` | Optional account & sync · send feedback · mistake notebook · support the developer |
+| `/admin` | Owner tool (password + two-factor), not linked |
+
+Phones get a bottom tab bar; from 768px a side navigation (icon rail on tablets, full sidebar from 1024px).
 
 Pages are lazy-loaded chunks, all precached by the service worker.
 

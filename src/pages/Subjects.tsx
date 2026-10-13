@@ -46,7 +46,7 @@ export default function Subjects() {
         <p className="mt-2 text-xs text-ink-3">{t('syncExplain')}</p>
       </Item>
 
-      <div className="flex flex-col gap-3">
+      <div className="grid gap-3 md:grid-cols-2">
         {subjects.map((sub) => {
           const chapters = all.get(sub.id) ?? []
           const done = chapters.filter((c) => statusOf(states, sub.id, c.id) === 'done').length

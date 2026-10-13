@@ -7,6 +7,7 @@ import { TimerIcon } from './components/icons/timer'
 import { BookTextIcon } from './components/icons/book-text'
 import { UserIcon } from './components/icons/user'
 import { Anim } from './components/ui'
+import { LogoMark, Wordmark } from './components/Logo'
 import { SettingsContext, useSettings, useSettingsQuery } from './lib/db'
 import { useT, type TKey } from './lib/i18n'
 import { complete, useNow, type FinishedSession } from './lib/timer'
@@ -17,6 +18,8 @@ import { Celebration } from './components/Celebration'
 import { EASE, spring } from './components/motion'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { track } from './lib/insights'
 
 // Each page is its own chunk (all precached by the service worker, so still offline).
 const Subjects = lazy(() => import('./pages/Subjects'))
@@ -33,6 +36,7 @@ const Settings = lazy(() => import('./pages/Settings'))
 const Coffee = lazy(() => import('./pages/Coffee'))
 const MistakesPage = lazy(() => import('./pages/MistakesPage'))
 const Account = lazy(() => import('./pages/Account'))
+const Feedback = lazy(() => import('./pages/Feedback'))
 const Admin = lazy(() => import('./pages/Admin')) // owner-only tool, not linked anywhere
 
 // `owns`: path prefixes that keep the tab highlighted on its sub-pages.
@@ -41,7 +45,7 @@ const TABS = [
   { to: '/subjects', key: 'subjects', Icon: CheckCheckIcon, owns: ['/subjects'] },
   { to: '/focus', key: 'focus', Icon: TimerIcon, owns: ['/focus'] },
   { to: '/resources', key: 'resources', Icon: BookTextIcon, owns: ['/resources'] },
-  { to: '/me', key: 'profile', Icon: UserIcon, owns: ['/me', '/progress', '/simulator', '/settings', '/coffee', '/mistakes', '/account'] },
+  { to: '/me', key: 'profile', Icon: UserIcon, owns: ['/me', '/progress', '/simulator', '/settings', '/coffee', '/mistakes', '/account', '/feedback'] },
 ] satisfies { to: string; key: TKey; Icon: unknown; owns: string[] }[]
 
 const tabOf = (path: string) => {
@@ -50,6 +54,15 @@ const tabOf = (path: string) => {
   return TABS.findIndex((x) => x.owns.some((p) => path === p || path.startsWith(p + '/')))
 }
 const depthOf = (path: string) => path.split('/').filter(Boolean).length
+
+// Anonymous usage: which kind of page was opened (never ids or names typed by the student).
+const featureOf = (path: string) => {
+  const [first, ...rest] = path.split('/').filter(Boolean)
+  if (!first) return 'home'
+  if (first === 'subjects') return ['subjects', 'subject', 'chapter'][rest.length] ?? 'chapter'
+  if (first === 'focus') return rest.length ? 'history' : 'focus'
+  return first
+}
 
 export default function App() {
   const s = useSettingsQuery()
@@ -130,10 +143,14 @@ function Shell() {
     prev.current = { idx, depth }
     mainRef.current?.scrollTo(0, 0)
   }, [loc.pathname, idx, depth])
+  useEffect(() => void (!adminArea && track(featureOf(loc.pathname))), [loc.pathname, adminArea])
 
   return (
-    <div className="mx-auto flex h-full max-w-md flex-col">
-      <m.main ref={mainRef} layoutScroll className="flex-1 overflow-x-hidden overflow-y-auto px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-28">
+    <div className="flex h-full">
+      {!adminArea && <SideNav idx={idx} />}
+      <m.main ref={mainRef} layoutScroll className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-28 md:px-8 md:pt-8 md:pb-12">
+        {/* Phones: the familiar column. Tablets/desktop: a wider reading column; the admin gets a workspace. */}
+        <div className={adminArea ? 'mx-auto w-full max-w-md lg:max-w-6xl' : 'mx-auto w-full max-w-md md:max-w-2xl'}>
         <AnimatePresence mode="wait" initial={false} custom={dir}>
           <m.div
             key={loc.pathname}
@@ -149,6 +166,7 @@ function Shell() {
             transition={{ duration: 0.22, ease: EASE }}
           >
             <ScrollContainer value={mainRef}>
+              <ErrorBoundary resetKey={loc.pathname}>
               <Suspense fallback={null}>
                 <Routes location={loc}>
                   <Route path="/" element={<Dashboard />} />
@@ -166,6 +184,7 @@ function Shell() {
                   <Route path="/coffee" element={<Coffee />} />
                   <Route path="/mistakes" element={<MistakesPage />} />
                   <Route path="/account" element={<Account />} />
+                  <Route path="/feedback" element={<Feedback />} />
                   <Route path="/admin" element={<Admin />} />
                   {/* Old URLs from earlier versions */}
                   <Route path="/checklist" element={<Navigate to="/subjects" replace />} />
@@ -173,14 +192,16 @@ function Shell() {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
+              </ErrorBoundary>
             </ScrollContainer>
           </m.div>
         </AnimatePresence>
+        </div>
       </m.main>
 
       {/* Opaque + own GPU layer: no backdrop blur repainting over scrolling content on Android. */}
       {!adminArea && (
-      <nav className="fixed inset-x-0 bottom-0 z-40 transform-gpu border-t border-line bg-bg pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed inset-x-0 bottom-0 z-40 transform-gpu border-t border-line bg-bg pb-[env(safe-area-inset-bottom)] md:hidden">
         <div className="mx-auto flex max-w-md px-1">
           {TABS.map(({ to, key, Icon }, i) => {
             const isActive = i === idx
@@ -206,6 +227,33 @@ function Shell() {
   )
 }
 
+// Tablets and desktop: the same tabs as a side navigation.
+function SideNav({ idx }: { idx: number }) {
+  const { t } = useT()
+  return (
+    <nav className="hidden w-20 shrink-0 flex-col gap-1 border-e border-line px-2 py-6 md:flex lg:w-64 lg:px-3">
+      <Link to="/" aria-label="SyncroBac" className="mb-6 flex items-center justify-center gap-2 lg:justify-start lg:px-3">
+        <LogoMark className="h-7 w-auto" />
+        <span className="hidden lg:inline">
+          <Wordmark className="text-base" />
+        </span>
+      </Link>
+      {TABS.map(({ to, key, Icon }, i) => {
+        const isActive = i === idx
+        return (
+          <Link key={to} to={to} aria-current={isActive ? 'page' : undefined} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[11px] transition-colors lg:min-h-11 lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-sm ${isActive ? 'font-medium text-ink' : 'text-ink-2 hover:bg-raised hover:text-ink'}`}>
+            {isActive && <m.span layoutId="side-pill" transition={spring} className="absolute inset-0 rounded-xl bg-accent/12" />}
+            <span className={`relative ${isActive ? 'text-accent' : ''}`}>
+              <Anim icon={Icon} size={20} play={isActive} />
+            </span>
+            <span className="relative">{t(key)}</span>
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
 // Completes the running session whichever page is open. Isolated in its own component
 // so its 1-second tick re-renders only this (renders nothing), not the whole app.
 function TimerWatcher({ onFocusDone }: { onFocusDone: (s: FinishedSession) => void }) {
@@ -228,7 +276,10 @@ function TimerWatcher({ onFocusDone }: { onFocusDone: (s: FinishedSession) => vo
     complete(s)
       .then((finished) => {
         notify(finished ? t('sessionDone') : t('breakDone'), finished ? t('sessionDoneSub') : t('breakDoneSub'))
-        if (finished) onFocusDone(finished)
+        if (finished) {
+          track('focus_done')
+          onFocusDone(finished)
+        }
       })
       .finally(() => (completing.current = false))
   }, [now, s, t, onFocusDone])

@@ -5,7 +5,8 @@ import { BellRing, Download, Monitor, Moon, Sun, Trash2, Upload } from 'lucide-r
 import { enableNotifications, notifyPermission, notifySupported } from '../lib/pwa'
 import { LanguagesIcon } from '../components/icons/languages'
 import { Item, Stagger } from '../components/motion'
-import { Anim, Button, Chip, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
+import { Anim, Button, Chip, PageHeader, SectionTitle, Segmented, Select, Switch, inputClass } from '../components/ui'
+import { insightsAvailable, setStatsEnabled, statsEnabled } from '../lib/insights'
 import { listSeries } from '../config/bac'
 import { cn } from '../lib/cn'
 import { db, today, updateSettings, useSettings, type Lang } from '../lib/db'
@@ -17,6 +18,7 @@ export default function Settings() {
   const [name, setName] = useState(s.name)
   const [msg, setMsg] = useState('')
   const [perm, setPerm] = useState(notifyPermission())
+  const [stats, setStats] = useState(statsEnabled)
   const file = useRef<HTMLInputElement>(null)
   const nav = useNavigate()
   // Tap the version 7 times to reveal the admin entry on this device (Android "developer mode" style).
@@ -166,6 +168,15 @@ export default function Settings() {
         <SectionTitle>{t('data')}</SectionTitle>
         <div className="card flex flex-col gap-3 p-4">
           <p className="text-sm text-ink-2">{t('dataExplain')}</p>
+          {insightsAvailable && (
+            <div className="-mx-4 flex items-center gap-3 border-y border-line px-4 py-2">
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm text-ink">{t('statsLabel')}</span>
+                <span className="block text-xs text-ink-3">{t('statsSub')}</span>
+              </span>
+              <Switch label={t('statsLabel')} checked={stats} onChange={(v) => (setStatsEnabled(v), setStats(v))} />
+            </div>
+          )}
           <Button variant="secondary" block onClick={exportData}>
             <Download size={18} />
             {t('exportData')}

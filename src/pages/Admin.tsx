@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, m } from 'motion/react'
-import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Eye, EyeOff, History, KeyRound, LogOut, Plus, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Bug, ChartColumn, Check, CheckCheck, Copy, ExternalLink, Eye, EyeOff, History, KeyRound, Layers, Link2, ListOrdered, LogOut, MessageSquareText, Plus, RotateCcw, ShieldAlert, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { LogoMark } from '../components/Logo'
 import { EASE, Item, Stagger } from '../components/motion'
 import { Button, Chip, IconButton, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
@@ -14,7 +14,7 @@ import { refreshContent } from '../lib/contentSync'
 
 const IDLE_MS = 15 * 60_000
 
-type Tab = 'resources' | 'subjects' | 'chapters' | 'general'
+type Tab = 'resources' | 'subjects' | 'chapters' | 'feedback' | 'stats' | 'general'
 type Row = Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export default function Admin() {
@@ -86,6 +86,7 @@ export default function Admin() {
 
   return (
     <div dir="ltr" lang="fr" className="text-start">
+      <div className={state === 'ready' ? '' : 'mx-auto max-w-md'}>
       {!adminConfigured ? (
         <Notice text="Supabase n’est pas configuré (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)." />
       ) : state === 'loading' ? null : state === 'signedOut' ? (
@@ -99,6 +100,7 @@ export default function Admin() {
       ) : (
         <Panel tab={tab} setTab={setTab} save={save} toast={toast} onSignOut={leave} />
       )}
+      </div>
     </div>
   )
 }
@@ -121,24 +123,32 @@ function Panel({ tab, setTab, save, toast, onSignOut }: { tab: Tab; setTab: (t: 
           }
         />
       </Item>
-      <Item>
-        <Segmented<Tab>
-          id="admin-tab"
-          value={tab}
-          onChange={setTab}
-          options={[
-            { value: 'resources', label: 'Ressources' },
-            { value: 'subjects', label: 'Matières' },
-            { value: 'chapters', label: 'Chapitres' },
-            { value: 'general', label: 'Général' },
-          ]}
-        />
-      </Item>
-      <Item>
-        {tab === 'resources' && <ResourcesAdmin save={save} />}
-        {tab === 'subjects' && <SubjectsAdmin save={save} />}
-        {tab === 'chapters' && <ChaptersAdmin save={save} />}
-        {tab === 'general' && <GeneralAdmin save={save} />}
+      {/* Phone: scrollable tab row. Desktop: a sticky section list beside the workspace. */}
+      <Item className="flex flex-col gap-6 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+        <nav aria-label="Sections" className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:sticky lg:top-0 lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0">
+          {TABS.map(({ value, label, Icon }) => (
+            <button
+              key={value}
+              onClick={() => setTab(value)}
+              aria-current={tab === value ? 'page' : undefined}
+              className={cn(
+                'flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm transition-colors',
+                tab === value ? 'bg-accent/12 font-medium text-accent' : 'bg-surface text-ink-2 hover:text-ink lg:bg-transparent lg:hover:bg-raised',
+              )}
+            >
+              <Icon size={16} />
+              {label}
+            </button>
+          ))}
+        </nav>
+        <div className="min-w-0">
+          {tab === 'resources' && <ResourcesAdmin save={save} />}
+          {tab === 'subjects' && <SubjectsAdmin save={save} />}
+          {tab === 'chapters' && <ChaptersAdmin save={save} />}
+          {tab === 'feedback' && <FeedbackAdmin />}
+          {tab === 'stats' && <StatsAdmin />}
+          {tab === 'general' && <GeneralAdmin save={save} />}
+        </div>
       </Item>
 
       <AnimatePresence>
@@ -160,6 +170,15 @@ function Panel({ tab, setTab, save, toast, onSignOut }: { tab: Tab; setTab: (t: 
 }
 
 type Save = (fn: () => Promise<unknown>) => Promise<boolean>
+
+const TABS: { value: Tab; label: string; Icon: typeof History }[] = [
+  { value: 'resources', label: 'Ressources', Icon: Link2 },
+  { value: 'subjects', label: 'Matières', Icon: Layers },
+  { value: 'chapters', label: 'Chapitres', Icon: ListOrdered },
+  { value: 'feedback', label: 'Retours', Icon: MessageSquareText },
+  { value: 'stats', label: 'Statistiques', Icon: ChartColumn },
+  { value: 'general', label: 'Général', Icon: SlidersHorizontal },
+]
 
 // ── Auth screens ────────────────────────────────────────────────────────
 
@@ -611,14 +630,14 @@ function ChaptersAdmin({ save }: { save: Save }) {
 
       <div className="card divide-y divide-line">
         {rows?.map((r, i) => (
-          <div key={r.chapter_key} className="flex flex-col gap-2 px-3 py-3">
-            <div className="flex items-center gap-2">
+          <div key={r.chapter_key} className="flex flex-col gap-2 px-3 py-3 lg:flex-row lg:items-center">
+            <div className="flex items-center gap-2 lg:min-w-0 lg:flex-1">
               <span className="tnum w-6 text-sm text-ink-3">{i + 1}.</span>
               <input defaultValue={r.title_fr} aria-label="Titre FR" className={cn(inputClass, 'min-w-0 flex-1')} onBlur={(e) => e.target.value.trim() && e.target.value !== r.title_fr && patch(r, { title_fr: e.target.value.trim() })} />
               <IconButton label="Monter" disabled={i === 0} className="size-9 disabled:opacity-30" onClick={() => save(() => swapPositions('chapters', r, rows[i - 1], key)).then(reload)}><ArrowUp size={16} /></IconButton>
               <IconButton label="Descendre" disabled={i === rows.length - 1} className="size-9 disabled:opacity-30" onClick={() => save(() => swapPositions('chapters', r, rows[i + 1], key)).then(reload)}><ArrowDown size={16} /></IconButton>
             </div>
-            <div className="flex items-center gap-2 ps-8">
+            <div className="flex items-center gap-2 ps-8 lg:min-w-0 lg:flex-1 lg:ps-0">
               <input defaultValue={r.title_ar} aria-label="Titre AR" dir="rtl" lang="ar" className={cn(inputClass, 'min-w-0 flex-1')} onBlur={(e) => e.target.value.trim() && e.target.value !== r.title_ar && patch(r, { title_ar: e.target.value.trim() })} />
               <input type="number" min={0} max={12} defaultValue={r.weeks ?? ''} placeholder="sem." aria-label="Semaines" className={cn(inputClass, 'tnum w-16 text-center')} onBlur={(e) => String(r.weeks ?? '') !== e.target.value && patch(r, { weeks: e.target.value ? +e.target.value : null })} />
               <IconButton
@@ -739,5 +758,276 @@ function AuditLog() {
         </div>
       )}
     </div>
+  )
+}
+
+// ── Feedback & crash reports ────────────────────────────────────────────
+
+const KIND_LABEL: Record<string, string> = { idea: 'Idée', bug: 'Bug', content: 'Contenu', other: 'Autre' }
+
+function FeedbackAdmin() {
+  const [view, setView] = useState<'messages' | 'errors'>('messages')
+  return (
+    <div className="flex flex-col gap-4">
+      <Segmented
+        id="adm-fb"
+        value={view}
+        onChange={setView}
+        options={[
+          { value: 'messages', label: 'Messages des élèves', icon: <MessageSquareText size={14} /> },
+          { value: 'errors', label: 'Plantages', icon: <Bug size={14} /> },
+        ]}
+      />
+      {view === 'messages' ? <Messages /> : <Crashes />}
+    </div>
+  )
+}
+
+function Messages() {
+  const [filter, setFilter] = useState<'new' | 'done' | 'all'>('new')
+  const where = filter === 'all' ? '' : `&done=eq.${filter === 'done'}`
+  const { rows, error, reload } = useTable(`feedback?select=*${where}&order=at.desc&limit=200`)
+  const act = async (fn: () => Promise<unknown>) => {
+    await fn().catch((e) => alert((e as Error).message))
+    reload()
+  }
+  // WhatsApp numbers (8 digits in Mauritania) become a wa.me link; emails a mailto.
+  const contactHref = (c: string) => (/^\+?[\d\s]{8,15}$/.test(c) ? `https://wa.me/${c.replace(/\D/g, '').replace(/^(\d{8})$/, '222$1')}` : /\S+@\S+/.test(c) ? `mailto:${c}` : null)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <SectionTitle
+        action={
+          <Select value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)} aria-label="Filtre" className="w-36">
+            <option value="new">Nouveaux</option>
+            <option value="done">Traités</option>
+            <option value="all">Tous</option>
+          </Select>
+        }
+      >
+        Messages <span className="tnum text-ink-3">· {rows?.length ?? '…'}</span>
+      </SectionTitle>
+      {error && <TableMissing error={error} />}
+      <div className="grid gap-3 xl:grid-cols-2">
+        {rows?.map((r) => {
+          const href = r.contact ? contactHref(r.contact) : null
+          return (
+            <article key={r.id} className={cn('card flex flex-col gap-3 p-4', r.done && 'opacity-60')}>
+              <header className="flex items-center gap-2 text-xs text-ink-3">
+                <Chip tone={r.kind === 'bug' ? 'warning' : r.kind === 'content' ? 'accent' : 'neutral'}>{KIND_LABEL[r.kind] ?? r.kind}</Chip>
+                <span>{new Date(r.at).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                {r.user_id && <span title="Élève connecté à un compte">· compte</span>}
+              </header>
+              <p className="text-sm whitespace-pre-wrap" dir="auto">{r.message}</p>
+              {(r.contact || r.context) && (
+                <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-3">
+                  {r.contact && (href ? <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent">{r.contact}</a> : <span>{r.contact}</span>)}
+                  {r.context?.serie && <span>Série {r.context.serie}</span>}
+                  {r.context?.lang && <span>{r.context.lang === 'ar' ? 'Arabe' : 'Français'}</span>}
+                  {r.context?.v && <span>v{r.context.v}</span>}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <Button variant="secondary" className="flex-1" onClick={() => act(() => api(`feedback?id=eq.${r.id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ done: !r.done }) }))}>
+                  {r.done ? <RotateCcw size={16} /> : <CheckCheck size={16} />}
+                  {r.done ? 'Remettre en nouveau' : 'Marquer traité'}
+                </Button>
+                <IconButton label="Supprimer" className="hover:text-danger" onClick={() => confirm('Supprimer ce message ?') && act(() => api(`feedback?id=eq.${r.id}`, { method: 'DELETE', prefer: 'return=minimal' }))}>
+                  <Trash2 size={16} />
+                </IconButton>
+              </div>
+            </article>
+          )
+        })}
+      </div>
+      {rows?.length === 0 && <p className="card p-4 text-sm text-ink-3">{filter === 'new' ? 'Aucun nouveau message.' : 'Aucun message.'}</p>}
+    </div>
+  )
+}
+
+function Crashes() {
+  const { rows, error, reload } = useTable('client_errors?select=*&order=at.desc&limit=500')
+  // Same message = same bug: group, newest first.
+  const groups = new Map<string, Row[]>()
+  for (const r of rows ?? []) groups.set(r.message, [...(groups.get(r.message) ?? []), r])
+  return (
+    <div className="flex flex-col gap-4">
+      <SectionTitle
+        action={
+          !!rows?.length && (
+            <Button variant="secondary" onClick={async () => confirm('Effacer tous les plantages ?') && (await api('client_errors?id=gt.0', { method: 'DELETE', prefer: 'return=minimal' }).catch((e) => alert(e.message)), reload())}>
+              <Trash2 size={16} /> Tout effacer
+            </Button>
+          )
+        }
+      >
+        Plantages <span className="tnum text-ink-3">· {groups.size} bug{groups.size > 1 ? 's' : ''}</span>
+      </SectionTitle>
+      {error && <TableMissing error={error} />}
+      <div className="card divide-y divide-line">
+        {[...groups].map(([message, list]) => (
+          <details key={message} className="group px-4 py-3">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3">
+              <span className="tnum grid h-7 min-w-7 place-items-center rounded-lg bg-warning/12 px-1.5 text-xs font-medium text-warning">{list.length}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-mono text-xs text-ink">{message}</span>
+                <span className="block truncate text-xs text-ink-3">
+                  dernier : {new Date(list[0].at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })} · {list[0].page} · v{list[0].app_version}
+                </span>
+              </span>
+            </summary>
+            <pre className="mt-2 overflow-x-auto rounded-xl bg-bg p-3 text-[11px] leading-relaxed text-ink-2">{list[0].stack || 'Pas de trace.'}</pre>
+            <p className="mt-2 truncate text-[11px] text-ink-3">{list[0].user_agent}</p>
+          </details>
+        ))}
+        {rows?.length === 0 && <p className="p-4 text-sm text-ink-3">Aucun plantage signalé.</p>}
+      </div>
+    </div>
+  )
+}
+
+function TableMissing({ error }: { error: string }) {
+  return <p className="card p-4 text-xs text-ink-3">Indisponible ({error}). Exécute supabase/insights.sql dans Supabase → SQL Editor.</p>
+}
+
+// ── Anonymous usage stats ───────────────────────────────────────────────
+
+const FEATURE_LABEL: Record<string, string> = {
+  open: 'Ouvre l’app', home: 'Accueil', plan: 'Plan', subjects: 'Matières', subject: 'Page matière', chapter: 'Page chapitre',
+  focus: 'Focus', focus_done: 'Session terminée', history: 'Historique', resources: 'Ressources', me: 'Profil', progress: 'Progrès',
+  simulator: 'Simulateur', settings: 'Réglages', coffee: 'Page café', mistakes: 'Carnet d’erreurs', account: 'Compte', feedback: 'Avis envoyé',
+}
+
+function StatsAdmin() {
+  const [days, setDays] = useState<'7' | '30' | '90'>('30')
+  const [daily, setDaily] = useState<{ day: string; active: number; new_devices: number }[] | null>(null)
+  const [mix, setMix] = useState<{ kind: string; name: string; devices: number }[] | null>(null)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    setError('')
+    Promise.all([
+      api<typeof daily>('rpc/usage_daily', { method: 'POST', body: JSON.stringify({ p_days: +days }) }),
+      api<typeof mix>('rpc/usage_breakdown', { method: 'POST', body: JSON.stringify({ p_days: +days }) }),
+    ]).then(([d, m]) => (setDaily(d), setMix(m)), (e) => setError((e as Error).message))
+  }, [days])
+
+  // Fill missing days with 0 so the chart is a true timeline.
+  const series = Array.from({ length: +days }, (_, i) => {
+    const d = new Date(Date.now() - (+days - 1 - i) * 86_400_000)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const row = daily?.find((r) => r.day === key)
+    return { day: key, active: row?.active ?? 0, fresh: row?.new_devices ?? 0 }
+  })
+  const total = mix?.find((r) => r.kind === 'total')?.devices ?? 0
+  const todayActive = series.at(-1)?.active ?? 0
+  const newTotal = series.reduce((n, r) => n + r.fresh, 0)
+  const avg = series.length ? Math.round(series.reduce((n, r) => n + r.active, 0) / series.length) : 0
+  const features = (mix ?? []).filter((r) => r.kind === 'feature' && r.name !== 'open')
+  const by = (kind: string) => (mix ?? []).filter((r) => r.kind === kind)
+
+  return (
+    <div className="flex flex-col gap-5">
+      <SectionTitle action={<div className="w-56"><Segmented id="adm-days" value={days} onChange={setDays} options={[{ value: '7', label: '7 j' }, { value: '30', label: '30 j' }, { value: '90', label: '90 j' }]} /></div>}>
+        Utilisation (anonyme)
+      </SectionTitle>
+      {error && <TableMissing error={error} />}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat label="Aujourd’hui" value={todayActive} hint="téléphones actifs" />
+        <Stat label={`Sur ${days} jours`} value={total} hint="téléphones différents" />
+        <Stat label="Moyenne / jour" value={avg} hint="téléphones actifs" />
+        <Stat label="Nouveaux" value={newTotal} hint={`installations sur ${days} j`} />
+      </div>
+
+      <div className="card p-4">
+        <p className="mb-3 text-sm text-ink-2">Téléphones actifs par jour</p>
+        <DailyBars data={series} />
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="card p-4">
+          <p className="mb-3 text-sm text-ink-2">Fonctions utilisées <span className="text-ink-3">· % des téléphones actifs</span></p>
+          <HBars rows={features.map((r) => ({ label: FEATURE_LABEL[r.name] ?? r.name, value: r.devices }))} total={total} />
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className="card p-4">
+            <p className="mb-3 text-sm text-ink-2">Séries</p>
+            <HBars rows={by('serie').map((r) => ({ label: r.name, value: r.devices }))} total={total} />
+          </div>
+          <div className="card p-4">
+            <p className="mb-3 text-sm text-ink-2">Langue</p>
+            <HBars rows={by('lang').map((r) => ({ label: r.name === 'ar' ? 'Arabe' : r.name === 'fr' ? 'Français' : r.name, value: r.devices }))} total={total} />
+          </div>
+        </div>
+      </div>
+      <p className="text-xs text-ink-3">Un téléphone = un appareil qui a ouvert l’app ce jour-là (identifiant aléatoire, sans nom ni email). Les élèves peuvent désactiver ces statistiques dans Réglages.</p>
+    </div>
+  )
+}
+
+function Stat({ label, value, hint }: { label: string; value: number; hint: string }) {
+  return (
+    <div className="card flex flex-col gap-1 p-4">
+      <span className="text-xs text-ink-3">{label}</span>
+      <span className="tnum text-3xl font-semibold">{value}</span>
+      <span className="text-xs text-ink-3">{hint}</span>
+    </div>
+  )
+}
+
+// One series → one color, no legend; hover/focus a day for its exact numbers.
+function DailyBars({ data }: { data: { day: string; active: number; fresh: number }[] }) {
+  const [hover, setHover] = useState<number | null>(null)
+  const max = Math.max(1, ...data.map((d) => d.active))
+  const fmt = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  const h = hover !== null ? data[hover] : null
+  return (
+    <div>
+      <div className="flex h-5 items-center text-xs text-ink-2" aria-live="polite">
+        {h ? <span><span className="text-ink">{fmt(h.day)}</span> · <span className="tnum">{h.active}</span> actifs · <span className="tnum">{h.fresh}</span> nouveaux</span> : <span className="text-ink-3">Touche une barre pour le détail · max {max}</span>}
+      </div>
+      <div className="mt-2 flex h-40 items-end gap-[2px] border-b border-line" onMouseLeave={() => setHover(null)}>
+        {data.map((d, i) => (
+          <button
+            key={d.day}
+            aria-label={`${fmt(d.day)} : ${d.active} actifs`}
+            onMouseEnter={() => setHover(i)}
+            onFocus={() => setHover(i)}
+            onBlur={() => setHover(null)}
+            className="group flex h-full min-w-0 flex-1 items-end"
+          >
+            <span
+              className={cn('block w-full rounded-t-[4px] transition-colors', hover === i ? 'bg-accent' : 'bg-accent/70 group-hover:bg-accent')}
+              style={{ height: d.active ? `max(${(d.active / max) * 100}%, 3px)` : 0 }}
+            />
+          </button>
+        ))}
+      </div>
+      <div className="mt-1.5 flex justify-between text-[11px] text-ink-3">
+        <span>{fmt(data[0].day)}</span>
+        <span>{fmt(data.at(-1)!.day)}</span>
+      </div>
+    </div>
+  )
+}
+
+function HBars({ rows, total }: { rows: { label: string; value: number }[]; total: number }) {
+  if (!rows.length) return <p className="text-sm text-ink-3">Pas encore de données.</p>
+  return (
+    // One grid for all rows: the label column fits the longest label, bars share the rest.
+    <ul className="grid grid-cols-[minmax(0,max-content)_minmax(3rem,1fr)_auto] items-center gap-x-3 gap-y-2.5">
+      {rows.map((r) => {
+        const pct = total ? Math.round((r.value / total) * 100) : 0
+        return (
+          <li key={r.label} className="contents text-sm">
+            <span className="truncate text-ink-2">{r.label}</span>
+            <span className="h-2 rounded-full bg-raised">
+              <span className="block h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
+            </span>
+            <span className="tnum text-end text-xs text-ink-2">{pct} % · {r.value}</span>
+          </li>
+        )
+      })}
+    </ul>
   )
 }

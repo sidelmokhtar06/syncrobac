@@ -9,6 +9,10 @@ import App from './App.tsx'
 import { loadCachedContent, refreshContent } from './lib/contentSync'
 import { handleAuthRedirect } from './lib/auth'
 import { installSyncHooks, startSync } from './lib/sync'
+import { startInsights } from './lib/insights'
+
+// Crash reports + anonymous usage (first, so startup errors are caught too).
+startInsights()
 
 // Admin-managed content: cached copy first (instant, offline), then refresh in the background.
 await loadCachedContent()

@@ -158,11 +158,12 @@ export function Chip({ children, tone = 'neutral', className }: { children: Reac
   )
 }
 
-export function ProgressBar({ value, className, tone = 'accent' }: { value: number; className?: string; tone?: 'accent' | 'success' }) {
+export function ProgressBar({ value, className, tone = 'accent', color }: { value: number; className?: string; tone?: 'accent' | 'success'; color?: string }) {
   return (
     <span className={cn('block h-1.5 overflow-hidden rounded-full bg-raised', className)}>
       <m.span
-        className={cn('block h-full rounded-full', tone === 'accent' ? 'bg-accent' : 'bg-success')}
+        className={cn('block h-full rounded-full', color ? '' : tone === 'accent' ? 'bg-accent' : 'bg-success')}
+        style={color ? { backgroundColor: color } : undefined}
         initial={{ width: 0 }}
         animate={{ width: `${Math.round(value * 100)}%` }}
         transition={{ duration: 0.8, ease: EASE }}

@@ -9,6 +9,7 @@ import { Item, Stagger, spring } from '../components/motion'
 import { Button, PageHeader, ProgressBar, SectionTitle, inputClass } from '../components/ui'
 import { cn } from '../lib/cn'
 import { setChapter, statusOf, subjectMastery, useChapterStates, useChapters } from '../lib/curriculum'
+import { subjectColor } from '../lib/colors'
 import { db, subjectsFor, useSettings } from '../lib/db'
 import { useT } from '../lib/i18n'
 import { start } from '../lib/timer'
@@ -29,6 +30,7 @@ export default function SubjectDetail() {
   if (!subject) return <Navigate to="/subjects" replace />
   const mastery = subjectMastery(chapters, states, subjectId)
   const done = chapters.filter((c) => statusOf(states, subjectId, c.id) === 'done').length
+  const subColor = subjectColor(subject)
   const rtl = lang === 'ar'
   const Chevron = rtl ? ChevronLeft : ChevronRight
 
@@ -39,13 +41,22 @@ export default function SubjectDetail() {
       </Item>
 
       <Item className="card p-5">
-        <div className="grid grid-cols-3 text-center">
-          <Metric value={`${Math.round(mastery * 100)}%`} label={t('progress')} />
-          <Metric value={`${((data?.minutes ?? 0) / 60).toFixed(1)} ${t('hoursUnit')}`} label={t('focusTime')} />
-          <Metric value={String(data?.tasks.filter((x) => !x.done).length ?? 0)} label={t('tasksTitle')} />
+        <div className="flex items-end justify-between gap-2 mb-4">
+          <div>
+            <p className="text-sm text-ink-2">{t('progress')}</p>
+            <p className="tnum text-4xl font-semibold" style={{ color: subColor }}>{Math.round(mastery * 100)}%</p>
+          </div>
+          <div className="text-end">
+            <p className="text-sm text-ink-2">{t('focusTime')}</p>
+            <p className="tnum text-lg font-semibold">{((data?.minutes ?? 0) / 60).toFixed(1)} {t('hoursUnit')}</p>
+          </div>
         </div>
-        <ProgressBar value={mastery} className="mt-4" />
-        <Button block className="mt-4" onClick={() => start(s, subjectId, null).then(() => nav('/focus'))}>
+        <ProgressBar value={mastery} color={mastery < 1 ? subColor : undefined} className="h-2" />
+        <div className="mt-3 flex items-center justify-between text-xs text-ink-3">
+          <span>{done} / {chapters.length} {t('chapters').toLowerCase()}</span>
+          <span>{data?.tasks.filter((x) => !x.done).length ?? 0} {t('tasks')} {t('pending')}</span>
+        </div>
+        <Button block className="mt-4" style={{ backgroundColor: subColor }} onClick={() => start(s, subjectId, null).then(() => nav('/focus'))}>
           <Play size={16} fill="currentColor" />
           {t('focusSubject')}
         </Button>

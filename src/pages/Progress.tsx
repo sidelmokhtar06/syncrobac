@@ -7,6 +7,7 @@ import { CountUp, EASE, Item, Stagger, spring } from '../components/motion'
 import { Anim, Chip, PageHeader, SectionTitle } from '../components/ui'
 import { cn } from '../lib/cn'
 import { db, subjectsFor, today, useSettings, type Lang } from '../lib/db'
+import { subjectColor } from '../lib/colors'
 import { dateLocale } from '../lib/hooks'
 import { useT } from '../lib/i18n'
 import { bestStreak, streakInfo } from '../lib/streak'
@@ -96,17 +97,20 @@ export default function Progress() {
         <Item>
           <SectionTitle>{t('timePerSubject')}</SectionTitle>
           <div className="card flex flex-col gap-3 p-4">
-            {bySubject.map(({ sub, min }, i) => (
-              <div key={sub.id}>
-                <div className="mb-1 flex justify-between text-sm">
-                  <span>{sub[lang]}</span>
-                  <span className="tnum text-ink-2">{min} {t('minutes')}</span>
+            {bySubject.map(({ sub, min }, i) => {
+              const subCol = subjectColor(sub)
+              return (
+                <div key={sub.id}>
+                  <div className="mb-1 flex justify-between text-sm">
+                    <span>{sub[lang]}</span>
+                    <span className="tnum text-ink-2">{min} {t('minutes')}</span>
+                  </div>
+                  <span className="block h-2 overflow-hidden rounded-full bg-raised">
+                    <m.span className="block h-full rounded-full" style={{ backgroundColor: subCol }} initial={{ width: 0 }} animate={{ width: `${(min / maxMin) * 100}%` }} transition={{ delay: 0.1 + i * 0.05, duration: 0.7, ease: EASE }} />
+                  </span>
                 </div>
-                <span className="block h-2 overflow-hidden rounded-full bg-raised">
-                  <m.span className="block h-full rounded-full bg-accent" initial={{ width: 0 }} animate={{ width: `${(min / maxMin) * 100}%` }} transition={{ delay: 0.1 + i * 0.05, duration: 0.7, ease: EASE }} />
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </Item>
       )}

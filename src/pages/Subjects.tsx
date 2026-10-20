@@ -4,8 +4,8 @@ import { CalendarCheckIcon } from '../components/icons/calendar-check'
 import { Item, Stagger } from '../components/motion'
 import { Anim, PageHeader, ProgressBar } from '../components/ui'
 import { getSerie } from '../config/bac'
-import { cn } from '../lib/cn'
 import { statusOf, subjectMastery, useAllChapters, useChapterStates } from '../lib/curriculum'
+import { subjectColor } from '../lib/colors'
 import { subjectsFor, useSettings } from '../lib/db'
 import { useT } from '../lib/i18n'
 
@@ -15,7 +15,6 @@ export default function Subjects() {
   const all = useAllChapters(s)
   const states = useChapterStates()
   const subjects = subjectsFor(s)
-  const topCoeff = subjects[2]?.coeff ?? 0
 
   // Coefficient-weighted mastery: a chapter of Maths (×9) moves the needle more than one of English (×2).
   const totalCoeff = subjects.reduce((a, x) => a + x.coeff, 0)
@@ -51,10 +50,11 @@ export default function Subjects() {
           const chapters = all.get(sub.id) ?? []
           const done = chapters.filter((c) => statusOf(states, sub.id, c.id) === 'done').length
           const mastery = subjectMastery(chapters, states, sub.id)
+          const subColor = subjectColor(sub)
           return (
             <Item key={sub.id}>
               <Link to={`/subjects/${sub.id}`} className="card flex min-h-18 items-center gap-4 px-4 py-3 transition-colors active:bg-raised">
-                <span className={cn('flex size-12 shrink-0 flex-col items-center justify-center rounded-xl leading-none', sub.coeff >= topCoeff ? 'bg-accent/12 text-accent' : 'bg-raised text-ink-2')}>
+                <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-xl leading-none" style={{ backgroundColor: `${subColor}1F`, color: subColor }}>
                   <span className="tnum text-lg font-semibold">{sub.coeff}</span>
                   <span className="mt-0.5 text-[10px] font-medium opacity-80">{t('coeff')}</span>
                 </span>
@@ -65,7 +65,7 @@ export default function Subjects() {
                       {done}/{chapters.length}
                     </span>
                   </span>
-                  <ProgressBar value={mastery} tone={mastery === 1 ? 'success' : 'accent'} className="mt-2" />
+                  <ProgressBar value={mastery} tone={mastery === 1 ? 'success' : 'accent'} color={mastery < 1 ? subColor : undefined} className="mt-2" />
                 </span>
               </Link>
             </Item>

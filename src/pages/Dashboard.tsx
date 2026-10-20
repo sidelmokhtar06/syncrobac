@@ -10,6 +10,7 @@ import { FlameIcon } from '../components/icons/flame'
 import { GraduationCapIcon } from '../components/icons/graduation-cap'
 import { Burst, CountUp, EASE, Item, Rolling, Stagger, spring } from '../components/motion'
 import { Anim, Button, Chip, SectionTitle } from '../components/ui'
+import { subjectColor } from '../lib/colors'
 import { cn } from '../lib/cn'
 import { ensureMissions, expectedShare, toggleMission, useAllChapters, useChapterStates, useMissions, weightedMastery } from '../lib/curriculum'
 import { subjectsFor, updateSettings, useSettings, type Mission } from '../lib/db'
@@ -187,17 +188,21 @@ export default function Dashboard() {
                 </span>
               </div>
             ))}
-          {items.map((mi, i) => (
-            <MissionRow
-              key={mi.subjectId + mi.chapterId}
-              mission={mi}
-              subjectName={subjects.get(mi.subjectId)?.[lang] ?? ''}
-              chapterName={all.get(mi.subjectId)?.find((c) => c.id === mi.chapterId)?.title[lang] ?? ''}
-              onToggle={() => toggleMission(i)}
-              onStart={() => start(s, mi.subjectId, mi.chapterId).then(() => nav('/focus'))}
-              to={`/subjects/${mi.subjectId}/${mi.chapterId}`}
-            />
-          ))}
+          {items.map((mi, i) => {
+            const sub = subjects.get(mi.subjectId)
+            return (
+              <MissionRow
+                key={mi.subjectId + mi.chapterId}
+                mission={mi}
+                subjectName={sub?.[lang] ?? ''}
+                chapterName={all.get(mi.subjectId)?.find((c) => c.id === mi.chapterId)?.title[lang] ?? ''}
+                subjectColor={sub ? subjectColor(sub) : undefined}
+                onToggle={() => toggleMission(i)}
+                onStart={() => start(s, mi.subjectId, mi.chapterId).then(() => nav('/focus'))}
+                to={`/subjects/${mi.subjectId}/${mi.chapterId}`}
+              />
+            )
+          })}
           <AnimatePresence>
             {items.length > 0 && doneCount === items.length && (
               <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.4, ease: EASE }} className="flex items-center gap-3 overflow-hidden px-4 py-3">
@@ -247,7 +252,7 @@ export default function Dashboard() {
   )
 }
 
-function MissionRow({ mission, subjectName, chapterName, onToggle, onStart, to }: { mission: Mission; subjectName: string; chapterName: string; onToggle: () => void; onStart: () => void; to: string }) {
+function MissionRow({ mission, subjectName, chapterName, subjectColor, onToggle, onStart, to }: { mission: Mission; subjectName: string; chapterName: string; subjectColor?: string; onToggle: () => void; onStart: () => void; to: string }) {
   const { t } = useT()
   const { key, Icon } = KIND[mission.kind]
   const [fire, setFire] = useState(0)
@@ -257,7 +262,8 @@ function MissionRow({ mission, subjectName, chapterName, onToggle, onStart, to }
           if (!mission.done) setFire(Date.now())
           onToggle()
         }} aria-pressed={mission.done} aria-label={chapterName} className="relative grid size-12 shrink-0 place-items-center">
-        <span className={cn('grid size-6 place-items-center rounded-full border-2 text-bg transition-colors duration-200', mission.done ? 'border-success bg-success' : 'border-ink-3/70')}>
+        <span className={cn('grid size-6 place-items-center rounded-full border-2 transition-colors duration-200', mission.done ? 'border-success bg-success text-bg' : subjectColor ? `border-[${subjectColor}]` : 'border-ink-3/70')}
+          style={mission.done ? undefined : subjectColor ? { borderColor: subjectColor } : undefined}>
           {mission.done && (
             <m.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={spring}>
               <Check size={14} strokeWidth={3} />
@@ -268,6 +274,7 @@ function MissionRow({ mission, subjectName, chapterName, onToggle, onStart, to }
       </button>
       <Link to={to} className="min-w-0 flex-1 py-2">
         <span className="flex items-center gap-1.5 text-xs text-ink-3">
+          <span className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: subjectColor ?? 'transparent' }} />
           <Icon size={13} />
           {t(key)} · {subjectName}
         </span>

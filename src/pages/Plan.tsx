@@ -5,6 +5,7 @@ import { EASE, Item, Stagger } from '../components/motion'
 import { Chip, PageHeader } from '../components/ui'
 import { cn } from '../lib/cn'
 import { buildPlan, useAllChapters, useChapterStates } from '../lib/curriculum'
+import { subjectColor } from '../lib/colors'
 import { useSettings } from '../lib/db'
 import { dateLocale } from '../lib/hooks'
 import { useT } from '../lib/i18n'
@@ -58,7 +59,7 @@ export default function Plan() {
                 {w.items.map(({ subject, chapter }) => (
                   <li key={subject.id + chapter.id}>
                     <Link to={`/subjects/${subject.id}/${chapter.id}`} className="flex min-h-11 items-center gap-3 rounded-lg py-1">
-                      <span className="tnum grid size-8 shrink-0 place-items-center rounded-lg bg-raised text-xs font-semibold text-ink-2">{subject.coeff}</span>
+                    <span className="tnum grid size-8 shrink-0 place-items-center rounded-lg text-xs font-semibold" style={{ color: subjectColor(subject), backgroundColor: `${subjectColor(subject)}1F` }}>{subject.coeff}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm text-ink">{chapter.title[lang]}</span>
                         <span className="block truncate text-xs text-ink-3">{subject[lang]}</span>

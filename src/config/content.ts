@@ -14,6 +14,7 @@ export interface SubjectDef {
   fr: string
   ar: string
   coeff: number
+  color?: string // hex for subject-specific accent
 }
 
 export interface SerieDef {

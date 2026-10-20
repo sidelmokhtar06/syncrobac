@@ -90,17 +90,6 @@ export interface DayMissions {
 }
 
 // One entry of the mistake notebook: what went wrong and the right way, to reread before the BAC.
-export interface Mistake {
-  id?: number
-  uid?: string
-  updatedAt?: number
-  subjectId: string
-  chapterId: string
-  text: string
-  fix?: string
-  createdAt: number
-}
-
 export interface SavedLink {
   id?: number
   uid?: string
@@ -110,6 +99,12 @@ export interface SavedLink {
   category: 'group' | 'site' | 'video' | 'app'
   note?: string
   createdAt: number
+}
+
+export interface SimulatorGrades {
+  id: 1
+  grades: Record<string, string>
+  updatedAt: number
 }
 
 // A day counts toward the streak if the student finished a focus session or a task.
@@ -130,6 +125,7 @@ export const db = new Dexie('syncrobac') as Dexie & {
   content: EntityTable<{ key: string; bundle: ContentBundle; fetchedAt: number }, 'key'>
   mistakes: EntityTable<Mistake, 'id'>
   deletions: EntityTable<{ id?: number; collection: string; key: string; at: number }, 'id'>
+  simulator: EntityTable<SimulatorGrades, 'id'>
 }
 
 db.version(1).stores({
@@ -193,6 +189,9 @@ db.version(5)
     await tx.table('days').toCollection().modify((d) => void (d.updatedAt ??= now))
     await tx.table('missions').clear() // regenerated today; old ones may reference renamed chapters
   })
+
+// v6: simulator grades persistence
+db.version(6).stores({ simulator: 'id' })
 
 const DURATIONS = { pomodoro: 25, short: 5, long: 15, custom: 45 }
 

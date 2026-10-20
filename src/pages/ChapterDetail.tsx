@@ -11,6 +11,7 @@ import { chapterKey, setChapter, useChapters } from '../lib/curriculum'
 import { db, subjectsFor, useSettings, type ChapterStatus, type Confidence } from '../lib/db'
 import { useT } from '../lib/i18n'
 import { start } from '../lib/timer'
+import { useDebouncedSave } from '../lib/hooks'
 
 export default function ChapterDetail() {
   const { subjectId = '', chapterId = '' } = useParams()
@@ -33,6 +34,8 @@ export default function ChapterDetail() {
   useEffect(() => {
     if (data && notes === null) setNotes(data.state?.notes ?? '')
   }, [data, notes])
+
+  useDebouncedSave(notes ?? '', (v) => setChapter(subjectId, chapterId, { notes: v }), 500)
 
   if (!subject) return <Navigate to="/subjects" replace />
   if (!chapter) return chapters.length ? <Navigate to={`/subjects/${subjectId}`} replace /> : null
@@ -109,7 +112,6 @@ export default function ChapterDetail() {
         <textarea
           value={notes ?? ''}
           onChange={(e) => setNotes(e.target.value)}
-          onBlur={() => notes !== null && setChapter(subjectId, chapterId, { notes })}
           placeholder={t('notesPlaceholder')}
           rows={5}
           className="card w-full resize-y p-4 text-[15px] leading-relaxed text-ink outline-none placeholder:text-ink-3 focus:border-accent"

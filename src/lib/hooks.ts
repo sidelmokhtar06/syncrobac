@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, today } from './db'
 import { streakInfo, type StreakInfo } from './streak'
@@ -29,3 +30,13 @@ export const useToday = () =>
 
 // Dates in the UI language; Arabic keeps Western digits (as used in Mauritanian schools).
 export const dateLocale = (lang: 'fr' | 'ar') => (lang === 'ar' ? 'ar-u-nu-latn' : 'fr-FR')
+
+/** Save a value after the user stops typing for `delay` ms. */
+export function useDebouncedSave<T>(value: T, onSave: (v: T) => void, delay = 500) {
+  const timer = useRef<ReturnType<typeof setTimeout>>()
+  useEffect(() => {
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => onSave(value), delay)
+    return () => clearTimeout(timer.current)
+  }, [value, onSave, delay])
+}

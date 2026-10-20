@@ -58,7 +58,7 @@ export function Segmented<T extends string>({
   value, options, onChange, id, disabled,
 }: {
   value: T
-  options: { value: T; label: string; icon?: ReactNode }[]
+  options: { value: T; label: string; icon?: ReactNode; dot?: string }[]
   onChange: (v: T) => void
   id: string // unique layoutId for the sliding thumb
   disabled?: boolean
@@ -78,6 +78,7 @@ export function Segmented<T extends string>({
           >
             {on && <m.span layoutId={id} transition={spring} className="absolute inset-0 rounded-lg border border-line-strong bg-surface" />}
             <span className="relative flex items-center gap-1.5 whitespace-nowrap">
+              {o.dot && <span className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: o.dot }} />}
               {o.icon}
               {o.label}
             </span>

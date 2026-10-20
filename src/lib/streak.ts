@@ -13,6 +13,7 @@ export interface StreakInfo {
   current: number
   frozen: Set<string> // days saved by a freeze (shown on the calendar)
   freezeAvailable: boolean // this week's freeze is still unused
+  freezeNextMonday: string | null // ISO date (YYYY-MM-DD) of the Monday when the next freeze becomes available
   weekActive: number // active days this week
 }
 
@@ -48,10 +49,18 @@ export function streakInfo(dates: string[]): StreakInfo {
     x.setDate(x.getDate() + i)
     return today(x)
   })
+  // Next freeze: this week if available, otherwise next week's Monday
+  const freezeAvailable = ![...frozen].some((k) => mondayKey(new Date(k + 'T12:00:00')) === thisWeek)
+  const freezeNextMonday = freezeAvailable ? thisWeek : (() => {
+    const next = new Date(thisWeek + 'T12:00:00')
+    next.setDate(next.getDate() + 7)
+    return mondayKey(next)
+  })()
   return {
     current,
     frozen,
-    freezeAvailable: ![...frozen].some((k) => mondayKey(new Date(k + 'T12:00:00')) === thisWeek),
+    freezeAvailable,
+    freezeNextMonday,
     weekActive: weekDays.filter((k) => set.has(k)).length,
   }
 }

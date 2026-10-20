@@ -1,19 +1,42 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Check } from 'lucide-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { MENTIONS } from '../config/bac'
 import { cn } from '../lib/cn'
-import { subjectsFor, useSettings } from '../lib/db'
+import { subjectsFor, useSettings, db } from '../lib/db'
 import { useT } from '../lib/i18n'
 
 export default function Simulator() {
   const s = useSettings()
   const { t, lang } = useT()
   const subjects = subjectsFor(s)
-  const [grades, setGrades] = useState<Record<string, string>>({})
+  const saved = useLiveQuery(() => db.simulator.get(1), [], { grades: {} })
+  const [grades, setGrades] = useState<Record<string, string>>(saved?.grades ?? {})
 
-  const entered = subjects.filter((x) => grades[x.id] !== undefined && grades[x.id] !== '')
+  // Persist on change (debounced 300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      db.simulator.put({ id: 1, grades, updatedAt: Date.now() })
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [grades])
+
+  // Re-sync when saved grades change (e.g. cross-device sync)
+  useEffect(() => {
+    setGrades(saved?.grades ?? {})
+  }, [saved?.updatedAt])
+
+  const allSet = useMemo(() => {
+    const g = { ...grades }
+    for (const sub of subjects) {
+      if (!(sub.id in g)) g[sub.id] = ''
+    }
+    return g
+  }, [grades, subjects])
+
+  const entered = subjects.filter((x) => allSet[x.id] !== undefined && allSet[x.id] !== '')
   const rest = subjects.filter((x) => !entered.includes(x))
-  const points = entered.reduce((a, x) => a + Number(grades[x.id]) * x.coeff, 0)
+  const points = entered.reduce((a, x) => a + Number(allSet[x.id]) * x.coeff, 0)
   const enteredCoeff = entered.reduce((a, x) => a + x.coeff, 0)
   const restCoeff = rest.reduce((a, x) => a + x.coeff, 0)
   const avg = enteredCoeff ? points / enteredCoeff : null
@@ -31,10 +54,10 @@ export default function Simulator() {
             <span className="tnum text-xs text-ink-3">×{x.coeff}</span>
             <input
               type="number" inputMode="decimal" min={0} max={20} step={0.25} placeholder="—"
-              value={grades[x.id] ?? ''}
+              value={allSet[x.id] ?? ''}
               onChange={(e) => {
                 const v = e.target.value
-                if (v === '' || (+v >= 0 && +v <= 20)) setGrades({ ...grades, [x.id]: v })
+                if (v === '' || (+v >= 0 && +v <= 20)) setGrades((prev) => ({ ...prev, [x.id]: v }))
               }}
               className="tnum h-9 w-16 rounded-lg border border-line-strong bg-surface text-center text-sm outline-none placeholder:text-ink-3 focus:border-accent"
             />

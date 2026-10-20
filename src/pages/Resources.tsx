@@ -1,41 +1,87 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, m } from 'motion/react'
-import { ExternalLink, Plus, Share2, Trash2, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { EASE, Item, Stagger } from '../components/motion'
-import { Button, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
+import { ResourceCard, domain, type ResourceItem } from '../components/ResourceCard'
+import { AddLinkForm } from '../components/AddLinkForm'
+import { SearchBar } from '../components/SearchBar'
+import { Button, Chip, PageHeader, SectionTitle, Select, inputClass } from '../components/ui'
 import { suggestedLinks } from '../config/links'
 import { cn } from '../lib/cn'
-import { db, useSettings, type SavedLink } from '../lib/db'
-import { useT, type TKey } from '../lib/i18n'
-
-type Cat = 'all' | SavedLink['category']
-const CATS: { value: Cat; key: TKey }[] = [
-  { value: 'all', key: 'catAll' },
-  { value: 'group', key: 'catGroup' },
-  { value: 'site', key: 'catSite' },
-  { value: 'video', key: 'catVideo' },
-]
-
-const domain = (url: string) => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return url
-  }
-}
+import { db, subjectsFor, useSettings, type SavedLink } from '../lib/db'
+import { useT } from '../lib/i18n'
 
 export default function Resources() {
   const s = useSettings()
   const { t, lang } = useT()
-  const [cat, setCat] = useState<Cat>('all')
+  const [search, setSearch] = useState('')
   const [adding, setAdding] = useState(false)
-  const mine = useLiveQuery(() => db.links.reverse().toArray(), [], [])
+  const [editing, setEditing] = useState<ResourceItem | null>(null)
 
-  const items = [
-    ...mine.map((l) => ({ ...l, mine: true, desc: l.note })),
-    ...suggestedLinks(s.serie).map((l) => ({ ...l, id: undefined, mine: false, desc: l[lang] })),
-  ].filter((l) => cat === 'all' || l.category === cat)
+  const subjects = useMemo(() => subjectsFor(s), [s])
+  const topCoeff = Math.max(...subjects.map((s) => s.coeff), 1)
+  const rtl = lang === 'ar'
+  const Chevron = rtl ? ChevronLeft : ChevronRight
+
+  const mine = useLiveQuery(
+    async () => {
+      const all = await db.links.toArray()
+      return all.reverse()
+    },
+    [],
+    [],
+  )
+
+  const allItems = useMemo<ResourceItem[]>(() => {
+    const suggested = suggestedLinks(s.serie).map((l) => ({
+      ...l,
+      id: undefined,
+      mine: false,
+      desc: l[lang],
+      subjectId: l.subject ?? null,
+    }))
+    const custom = (mine ?? []).map((l) => ({
+      ...l,
+      mine: true,
+      desc: l.note,
+      subjectId: l.subjectId ?? null,
+    }))
+    return [...custom, ...suggested]
+  }, [mine, s.serie, lang])
+
+  // General links (not tied to a single subject)
+  const generalItems = useMemo(() => {
+    return allItems.filter((l) => !l.subjectId)
+  }, [allItems])
+
+  // Map of count per subject
+  const subjectCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const item of allItems) {
+      if (item.subjectId) {
+        counts.set(item.subjectId, (counts.get(item.subjectId) ?? 0) + 1)
+      }
+    }
+    return counts
+  }, [allItems])
+
+  // Search results across all links
+  const query = search.trim().toLowerCase()
+  const searchResults = useMemo(() => {
+    if (!query) return []
+    return allItems.filter((l) => {
+      const sub = l.subjectId ? subjects.find((x) => x.id === l.subjectId) : null
+      return (
+        l.title.toLowerCase().includes(query) ||
+        (l.desc && l.desc.toLowerCase().includes(query)) ||
+        l.url.toLowerCase().includes(query) ||
+        domain(l.url).toLowerCase().includes(query) ||
+        (sub && sub[lang].toLowerCase().includes(query))
+      )
+    })
+  }, [allItems, query, subjects, lang])
 
   return (
     <Stagger className="flex flex-col gap-6">
@@ -43,7 +89,11 @@ export default function Resources() {
         <PageHeader
           title={t('resources')}
           action={
-            <Button variant={adding ? 'secondary' : 'primary'} onClick={() => setAdding(!adding)} aria-expanded={adding}>
+            <Button
+              variant={adding ? 'secondary' : 'primary'}
+              onClick={() => setAdding(!adding)}
+              aria-expanded={adding}
+            >
               <m.span animate={{ rotate: adding ? 45 : 0 }} className="inline-flex">
                 <Plus size={18} />
               </m.span>
@@ -55,88 +105,150 @@ export default function Resources() {
 
       <AnimatePresence initial={false}>
         {adding && (
-          <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
-            <AddLink onDone={() => setAdding(false)} />
+          <m.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: EASE }}
+            className="overflow-hidden"
+          >
+            <AddLinkForm
+              onDone={() => { setAdding(false); setEditing(null) }}
+              initial={editing ?? undefined}
+            />
           </m.div>
         )}
       </AnimatePresence>
 
+      {/* Styled Search Bar */}
       <Item>
-        <SectionTitle>{t('links')}</SectionTitle>
-        <Segmented<Cat> id="link-cat" value={cat} onChange={setCat} options={CATS.map((c) => ({ value: c.value, label: t(c.key) }))} />
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder={t('searchResources')}
+        />
       </Item>
 
-      <div className="-mt-2 grid gap-3 md:grid-cols-2">
-        <AnimatePresence initial={false} mode="popLayout">
-          {items.map((l) => (
-            <m.div key={(l.mine ? 'm' : 's') + (l.id ?? l.url)} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }} className="card flex items-center gap-3 p-3">
-              <a href={l.url} target="_blank" rel="noopener noreferrer" className="flex min-w-0 flex-1 items-center gap-3">
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-raised text-sm font-semibold text-ink-2 uppercase">
-                  {l.category === 'group' ? <Users size={18} /> : domain(l.url).slice(0, 2)}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span className="truncate text-[15px] font-medium">{l.title}</span>
-                    <ExternalLink size={13} className="shrink-0 text-ink-3" />
-                  </span>
-                  {l.desc && <span className="block truncate text-sm text-ink-2">{l.desc}</span>}
-                  <span className="mt-0.5 flex items-center gap-2 text-xs text-ink-3">
-                    {domain(l.url)} · {l.mine ? t('mine') : t('suggested')}
-                  </span>
-                </span>
-              </a>
-              {'share' in navigator && (
-                <button onClick={() => navigator.share({ title: l.title, url: l.url }).catch(() => {})} className="grid size-11 shrink-0 place-items-center rounded-xl text-ink-3 hover:text-ink" aria-label={t('shareLink')}>
-                  <Share2 size={18} />
-                </button>
-              )}
-              {l.mine && (
-                <button onClick={() => db.links.delete(l.id!)} className="grid size-11 shrink-0 place-items-center rounded-xl text-ink-3 hover:text-danger" aria-label={t('delete')}>
-                  <Trash2 size={18} />
-                </button>
-              )}
-            </m.div>
-          ))}
-        </AnimatePresence>
-        {items.length === 0 && <p className="card px-4 py-6 text-center text-sm text-ink-3">{t('noLinks')}</p>}
-        <p className="text-center text-xs text-ink-3">{t('communitySoon')}</p>
-      </div>
+      {/* If Searching, show search results */}
+      {query ? (
+        <Item>
+          <SectionTitle
+            action={
+              <Chip tone="neutral" className="h-6 px-2.5 text-xs font-medium">
+                {searchResults.length}
+              </Chip>
+            }
+          >
+            {t('links')}
+          </SectionTitle>
 
+          <div className="flex flex-col gap-2">
+            <AnimatePresence initial={false} mode="popLayout">
+              {searchResults.map((item) => (
+                <ResourceCard
+                  key={(item.mine ? 'm' : 's') + (item.id ?? item.url)}
+                  item={item}
+                  onEdit={(i) => { setEditing(i); setAdding(true) }}
+                />
+              ))}
+            </AnimatePresence>
+
+            {searchResults.length === 0 && (
+              <div className="card flex flex-col items-center justify-center gap-3 p-8 text-center">
+                <p className="text-sm font-medium text-ink">{t('noSearchResults')}</p>
+                <p className="text-xs text-ink-3">« {search} »</p>
+                <Button variant="secondary" size="md" onClick={() => setSearch('')}>
+                  {t('clearSearch')}
+                </Button>
+              </div>
+            )}
+          </div>
+        </Item>
+      ) : (
+        <>
+          {/* Section 1: By Subject */}
+          <Item>
+            <SectionTitle
+              action={
+                <Chip tone="neutral" className="h-6 px-2.5 text-xs font-medium">
+                  {subjects.length} {t('subjects').toLowerCase()}
+                </Chip>
+              }
+            >
+              {t('subjectResources')}
+            </SectionTitle>
+
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              {subjects.map((sub) => {
+                const count = subjectCounts.get(sub.id) ?? 0
+                const major = sub.coeff >= topCoeff
+                return (
+                  <Link
+                    key={sub.id}
+                    to={`/resources/${sub.id}`}
+                    className="card flex items-center justify-between p-3.5 transition-colors hover:border-line-strong hover:bg-surface/90 active:bg-raised"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className={cn(
+                          'grid size-10 shrink-0 place-items-center rounded-xl font-semibold text-sm',
+                          major ? 'bg-accent/12 text-accent' : 'bg-raised text-ink-2',
+                        )}
+                      >
+                        {sub.coeff}
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-sm font-semibold text-ink">
+                          {sub[lang]}
+                        </h3>
+                        <p className="text-xs text-ink-3">
+                          {count > 0
+                            ? `${count} ${count > 1 ? t('resourcesCount') : 'ressource'}`
+                            : t('noLinks')}
+                        </p>
+                      </div>
+                    </div>
+                    <Chevron size={18} className="shrink-0 text-ink-3" />
+                  </Link>
+                )
+              })}
+            </div>
+          </Item>
+
+          {/* Section 2: General & Community */}
+          <Item>
+            <SectionTitle
+              action={
+                <Chip tone="neutral" className="h-6 px-2.5 text-xs font-medium">
+                  {generalItems.length}
+                </Chip>
+              }
+            >
+              {t('generalResources')}
+            </SectionTitle>
+
+            <div className="flex flex-col gap-2">
+              <AnimatePresence initial={false} mode="popLayout">
+                {generalItems.map((item) => (
+                  <ResourceCard
+                    key={(item.mine ? 'm' : 's') + (item.id ?? item.url)}
+                    item={item}
+                  onEdit={(i) => { setEditing(i); setAdding(true) }}
+                  />
+                ))}
+              </AnimatePresence>
+
+              {generalItems.length === 0 && (
+                <div className="card p-6 text-center text-sm text-ink-3">
+                  {t('noLinks')}
+                </div>
+              )}
+            </div>
+          </Item>
+        </>
+      )}
+
+      <p className="text-center text-xs text-ink-3">{t('communitySoon')}</p>
     </Stagger>
-  )
-}
-
-function AddLink({ onDone }: { onDone: () => void }) {
-  const { t } = useT()
-  const [title, setTitle] = useState('')
-  const [url, setUrl] = useState('')
-  const [note, setNote] = useState('')
-  const [category, setCategory] = useState<SavedLink['category']>('group')
-  const valid = /^https:\/\/[^\s.]+\.[^\s]+$/.test(url.trim())
-
-  return (
-    <form
-      className="card flex flex-col gap-3 p-4"
-      onSubmit={async (e) => {
-        e.preventDefault()
-        if (!valid || !title.trim()) return
-        await db.links.add({ title: title.trim(), url: url.trim(), note: note.trim() || undefined, category, createdAt: Date.now() })
-        onDone()
-      }}
-    >
-      <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('linkTitle')} aria-label={t('linkTitle')} className={inputClass} />
-      <input type="url" inputMode="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t('linkUrl')} aria-label={t('linkUrl')} dir="ltr" className={cn(inputClass, url && !valid && 'border-danger')} />
-      {url && !valid && <p className="-mt-1 text-xs text-danger">{t('invalidUrl')}</p>}
-      <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('linkNote')} aria-label={t('linkNote')} className={inputClass} />
-      <Select aria-label={t('linkCategory')} value={category} onChange={(e) => setCategory(e.target.value as SavedLink['category'])}>
-        <option value="group">{t('catGroup')}</option>
-        <option value="site">{t('catSite')}</option>
-        <option value="video">{t('catVideo')}</option>
-        <option value="app">{t('catApp')}</option>
-      </Select>
-      <Button type="submit" block disabled={!valid || !title.trim()}>
-        {t('save')}
-      </Button>
-    </form>
   )
 }

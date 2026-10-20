@@ -37,6 +37,7 @@ const Coffee = lazy(() => import('./pages/Coffee'))
 const MistakesPage = lazy(() => import('./pages/MistakesPage'))
 const Account = lazy(() => import('./pages/Account'))
 const Feedback = lazy(() => import('./pages/Feedback'))
+const SubjectResources = lazy(() => import('./pages/SubjectResources'))
 const Admin = lazy(() => import('./pages/Admin')) // owner-only tool, not linked anywhere
 
 // `owns`: path prefixes that keep the tab highlighted on its sub-pages.
@@ -177,6 +178,7 @@ function Shell() {
                   <Route path="/focus" element={<Focus />} />
                   <Route path="/focus/history" element={<History />} />
                   <Route path="/resources" element={<Resources />} />
+                  <Route path="/resources/:subjectId" element={<SubjectResources />} />
                   <Route path="/me" element={<Me />} />
                   <Route path="/progress" element={<Progress />} />
                   <Route path="/simulator" element={<SimulatorPage />} />

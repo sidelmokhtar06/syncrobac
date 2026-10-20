@@ -237,7 +237,7 @@ export default function Dashboard() {
             </span>
             <span className={cn('flex items-center gap-1.5 text-xs', streak.freezeAvailable ? 'text-accent' : 'text-ink-3')}>
               <Snowflake size={14} />
-              {streak.freezeAvailable ? t('freezeReady') : t('freezeUsed')}
+              {streak.freezeAvailable ? t('freezeReady') : streak.freezeNextMonday ? `${t('freezeNext')} ${new Date(streak.freezeNextMonday + 'T12:00:00').toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'short' })}` : t('freezeUsed')}
             </span>
           </div>
         </div>

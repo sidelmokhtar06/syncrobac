@@ -2,12 +2,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { m } from 'motion/react'
 import { CalendarDays, CalendarRange, Flame, Snowflake, Trophy } from 'lucide-react'
 import WeekChart from '../components/WeekChart'
-import { WeeklyRecap } from '../components/WeeklyRecap'
 import { FlameIcon } from '../components/icons/flame'
 import { CountUp, EASE, Item, Stagger, spring } from '../components/motion'
 import { Anim, Chip, PageHeader, SectionTitle } from '../components/ui'
 import { cn } from '../lib/cn'
 import { db, subjectsFor, today, useSettings, type Lang } from '../lib/db'
+import { dateLocale } from '../lib/hooks'
 import { useT } from '../lib/i18n'
 import { bestStreak, streakInfo } from '../lib/streak'
 
@@ -66,7 +66,7 @@ export default function Progress() {
           </span>
           <Chip tone={streak.freezeAvailable ? 'accent' : 'neutral'}>
             <Snowflake size={13} />
-            {streak.freezeAvailable ? t('freezeReady') : t('freezeUsed')}
+            {streak.freezeAvailable ? t('freezeReady') : streak.freezeNextMonday ? `${t('freezeNext')} ${new Date(streak.freezeNextMonday + 'T12:00:00').toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'short' })}` : t('freezeUsed')}
           </Chip>
         </div>
         <div className="mt-3 flex gap-1.5" aria-hidden>
@@ -116,10 +116,6 @@ export default function Progress() {
         <div className="card p-4">
           <Calendar active={new Set(data.days)} frozen={streak.frozen} />
         </div>
-      </Item>
-
-      <Item>
-        <WeeklyRecap />
       </Item>
 
       <Item>

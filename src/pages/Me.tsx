@@ -1,9 +1,6 @@
-import { useState } from 'react'
-import { CloudCheck, CloudUpload, Download, MessageSquareText, NotebookPen, ShieldCheck } from 'lucide-react'
+import { CloudCheck, CloudUpload, MessageSquareText, NotebookPen, ShieldCheck } from 'lucide-react'
 import { accountsAvailable, useUser } from '../lib/auth'
 import { adminEntryEnabled } from '../lib/adminEntry'
-import { InstallSheet } from '../components/InstallSheet'
-import { useInstall } from '../lib/pwa'
 import { CalendarCheckIcon } from '../components/icons/calendar-check'
 import { CoffeeIcon } from '../components/icons/coffee'
 import { ChartColumnIncreasingIcon } from '../components/icons/chart-column-increasing'
@@ -26,9 +23,7 @@ export default function Me() {
   const s = useSettings()
   const { t, lang } = useT()
   const streak = useStreakInfo()
-  const install = useInstall()
   const user = useUser()
-  const [howTo, setHowTo] = useState(false)
   const serie = getSerie(s.serie!)
   const initial = (s.name || serie.id).slice(0, 1).toUpperCase()
 
@@ -110,21 +105,8 @@ export default function Me() {
           <ListLink to="/settings" icon={<Anim icon={SettingsIcon} size={18} />} label={t('settings')} hint={t('dataExplain')} />
           {insightsAvailable && <ListLink to="/feedback" icon={<MessageSquareText size={18} />} label={t('feedback')} hint={t('feedbackSub')} />}
           {adminEntryEnabled() && <ListLink to="/admin" icon={<ShieldCheck size={18} />} label="Administration" hint="Accès protégé · 2FA" />}
-          {!install.installed && (
-            <button onClick={() => (install.canPrompt ? install.prompt() : setHowTo(true))} className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-start transition-colors active:bg-raised">
-              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent/12 text-accent">
-                <Download size={18} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm text-ink">{t('installApp')}</span>
-                <span className="block truncate text-xs text-ink-3">{t('installSub')}</span>
-              </span>
-            </button>
-          )}
         </div>
       </Item>
-
-      <InstallSheet open={howTo} onClose={() => setHowTo(false)} ios={install.ios} />
     </Stagger>
   )
 }

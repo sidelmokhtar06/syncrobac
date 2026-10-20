@@ -89,9 +89,9 @@ export default function Settings() {
                 value={s.theme}
                 onChange={(v) => updateSettings({ theme: v })}
                 options={[
-                  { value: 'system', label: t('themeAuto'), icon: <Monitor size={14} /> },
-                  { value: 'light', label: t('themeLight'), icon: <Sun size={14} /> },
-                  { value: 'dark', label: t('themeDark'), icon: <Moon size={14} /> },
+                  { value: 'system', label: t('themeAuto'), icon: <Monitor size={14} />, dot: '#A3ADBB' },
+                  { value: 'light', label: t('themeLight'), icon: <Sun size={14} />, dot: '#F59E0B' },
+                  { value: 'dark', label: t('themeDark'), icon: <Moon size={14} />, dot: '#6366F1' },
                 ]}
               />
             </div>

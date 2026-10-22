@@ -244,7 +244,7 @@ export const updateSettings = async (patch: Partial<Settings>) => {
   await db.settings.put({ ...cur, ...patch, id: 1 })
 }
 
-export const markActive = () => db.days.put({ date: today() })
+export const markActive = (d = new Date()) => db.days.put({ date: today(d) })
 
 export const subjectsFor = (s: Settings): Subject[] =>
   s.serie

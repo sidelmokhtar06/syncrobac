@@ -39,6 +39,7 @@ export default function Settings() {
     a.href = URL.createObjectURL(blob)
     a.download = `syncrobac-${today()}.json`
     a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000)
   }
 
   const importData = async (f: File) => {
@@ -50,6 +51,8 @@ export default function Settings() {
           await tb.clear()
           if (json.data[tb.name]) await tb.bulkPut(json.data[tb.name])
         }
+        // A backup taken mid-session would otherwise "finish" that session right away and log it.
+        await db.settings.toCollection().modify((x) => void (x.timer && (x.timer.endsAt = null)))
       })
       setMsg(t('imported'))
     } catch {

@@ -35,7 +35,8 @@ export default function ChapterDetail() {
     if (data && notes === null) setNotes(data.state?.notes ?? '')
   }, [data, notes])
 
-  useDebouncedSave(notes ?? '', (v) => setChapter(subjectId, chapterId, { notes: v }), 500)
+  // Only a real edit is saved: re-saving unchanged notes would bump the chapter's stamp (sync, recall missions).
+  useDebouncedSave(notes, (v) => v !== null && v !== (data?.state?.notes ?? '') && setChapter(subjectId, chapterId, { notes: v }), 500)
 
   if (!subject) return <Navigate to="/subjects" replace />
   if (!chapter) return chapters.length ? <Navigate to={`/subjects/${subjectId}`} replace /> : null
@@ -125,8 +126,13 @@ export default function ChapterDetail() {
             block
             className="text-danger hover:text-danger"
             onClick={async () => {
-              await db.customChapters.where('uid').equals(chapterId.replace('custom-', '')).delete()
-              await db.chapters.delete(chapterKey(subjectId, chapterId))
+              // Its tasks and mistakes go with it (they could no longer be reached). Sessions stay in the history.
+              await db.transaction('rw', [db.customChapters, db.chapters, db.tasks, db.mistakes], async () => {
+                await db.customChapters.where('uid').equals(chapterId.replace('custom-', '')).delete()
+                await db.chapters.delete(chapterKey(subjectId, chapterId))
+                await db.tasks.where('chapterId').equals(chapterId).delete()
+                await db.mistakes.where('chapterId').equals(chapterId).delete()
+              })
               nav(`/subjects/${subjectId}`, { replace: true })
             }}
           >

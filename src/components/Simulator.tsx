@@ -5,26 +5,25 @@ import { MENTIONS } from '../config/bac'
 import { cn } from '../lib/cn'
 import { subjectsFor, useSettings, db } from '../lib/db'
 import { useT } from '../lib/i18n'
+import { useDebouncedSave } from '../lib/hooks'
 
 export default function Simulator() {
   const s = useSettings()
   const { t, lang } = useT()
   const subjects = subjectsFor(s)
-  const saved = useLiveQuery(() => db.simulator.get(1), [], { grades: {} })
-  const [grades, setGrades] = useState<Record<string, string>>(saved?.grades ?? {})
+  // null = no grades saved yet, undefined = still loading.
+  const saved = useLiveQuery(async () => (await db.simulator.get(1)) ?? null, [])
+  const [grades, setGrades] = useState<Record<string, string>>({})
 
-  // Persist on change (debounced 300ms)
+  // Show the saved grades once loaded, and when they change (e.g. a backup restore).
   useEffect(() => {
-    const timer = setTimeout(() => {
-      db.simulator.put({ id: 1, grades, updatedAt: Date.now() })
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [grades])
-
-  // Re-sync when saved grades change (e.g. cross-device sync)
-  useEffect(() => {
-    setGrades(saved?.grades ?? {})
+    if (saved !== undefined) setGrades(saved?.grades ?? {})
   }, [saved])
+
+  // Persist edits only: writing back what was just loaded would re-trigger the query above.
+  useDebouncedSave(grades, (g) => {
+    if (saved !== undefined && JSON.stringify(g) !== JSON.stringify(saved?.grades ?? {})) db.simulator.put({ id: 1, grades: g, updatedAt: Date.now() })
+  }, 300)
 
   const allSet = useMemo(() => {
     const g = { ...grades }

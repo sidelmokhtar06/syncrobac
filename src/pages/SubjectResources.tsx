@@ -9,7 +9,6 @@ import { AddLinkForm } from '../components/AddLinkForm'
 import { SearchBar } from '../components/SearchBar'
 import { Button, Chip, PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { suggestedLinks } from '../config/links'
-import { cn } from '../lib/cn'
 import { db, subjectsFor, useSettings, type SavedLink } from '../lib/db'
 import { useT, type TKey } from '../lib/i18n'
 
@@ -160,7 +159,6 @@ export default function SubjectResources() {
           value={cat}
           onChange={setCat}
           options={CATS.map((c) => ({ value: c.value, label: t(c.key) }))}
-          className="overflow-x-auto"
         />
       </Item>
 

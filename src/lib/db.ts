@@ -99,6 +99,18 @@ export interface SavedLink {
   category: 'group' | 'site' | 'video' | 'app'
   note?: string
   createdAt: number
+  subjectId?: string | null
+}
+
+export interface Mistake {
+  id?: number
+  uid?: string
+  updatedAt?: number
+  subjectId: string
+  chapterId: string
+  text: string
+  fix?: string
+  createdAt: number
 }
 
 export interface SimulatorGrades {

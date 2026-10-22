@@ -1,12 +1,10 @@
 import { useMemo, useState } from 'react'
-import { m } from 'motion/react'
-import { AnimatePresence } from 'motion/react'
 import { cn } from '../lib/cn'
-import { EASE } from './motion'
-import { Button, Chip, inputClass, Select } from './ui'
+import { Button, inputClass, Select } from './ui'
 import { subjectsFor, useSettings, type SavedLink } from '../lib/db'
 import { db } from '../lib/db'
 import { useT } from '../lib/i18n'
+import type { Subject } from '../config/bac'
 
 const URL_RE = /^https:\/\/[^\s.]+\.[^\s]+$/
 
@@ -126,7 +124,7 @@ export function AddLinkForm({ subjectId, defaultCategory = 'group', onDone, init
             className="w-full"
           >
             <option value="">{t('general')}</option>
-            {subjects.map((sub) => (
+            {subjects.map((sub: Subject) => (
               <option key={sub.id} value={sub.id}>
                 {sub[lang]}
               </option>

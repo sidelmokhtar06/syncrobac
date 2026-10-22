@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, today } from './db'
 import { streakInfo, type StreakInfo } from './streak'
 
 export const useTasks = () => useLiveQuery(() => db.tasks.toArray(), [], [])
 
-const EMPTY_STREAK: StreakInfo = { current: 0, frozen: new Set(), freezeAvailable: true, weekActive: 0 }
+const EMPTY_STREAK: StreakInfo = { current: 0, frozen: new Set(), freezeAvailable: true, freezeNextMonday: null, weekActive: 0 }
 
 export const useStreakInfo = () =>
   useLiveQuery(async () => streakInfo((await db.days.toArray()).map((d) => d.date)), [], EMPTY_STREAK)
@@ -33,10 +33,10 @@ export const dateLocale = (lang: 'fr' | 'ar') => (lang === 'ar' ? 'ar-u-nu-latn'
 
 /** Save a value after the user stops typing for `delay` ms. */
 export function useDebouncedSave<T>(value: T, onSave: (v: T) => void, delay = 500) {
-  const timer = useRef<ReturnType<typeof setTimeout>>()
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
-    clearTimeout(timer.current)
+    if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(() => onSave(value), delay)
-    return () => clearTimeout(timer.current)
+    return () => { if (timer.current) clearTimeout(timer.current) }
   }, [value, onSave, delay])
 }

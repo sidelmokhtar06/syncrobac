@@ -117,16 +117,6 @@ export default function SubjectDetail() {
   )
 }
 
-function Metric({ value, label }: { value: string; label: string }) {
-  return (
-    <div>
-      <p className="tnum text-xl font-semibold">
-        <bdi>{value}</bdi>
-      </p>
-      <p className="mt-0.5 text-xs text-ink-2">{label}</p>
-    </div>
-  )
-}
 
 function AddChapter({ subjectId }: { subjectId: string }) {
   const { t } = useT()

@@ -24,7 +24,7 @@ export default function Simulator() {
   // Re-sync when saved grades change (e.g. cross-device sync)
   useEffect(() => {
     setGrades(saved?.grades ?? {})
-  }, [saved?.updatedAt])
+  }, [saved])
 
   const allSet = useMemo(() => {
     const g = { ...grades }

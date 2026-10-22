@@ -7,10 +7,10 @@ import { EASE, Item, Stagger } from '../components/motion'
 import { ResourceCard, domain, type ResourceItem } from '../components/ResourceCard'
 import { AddLinkForm } from '../components/AddLinkForm'
 import { SearchBar } from '../components/SearchBar'
-import { Button, Chip, PageHeader, SectionTitle, Select, inputClass } from '../components/ui'
+import { Button, Chip, PageHeader, SectionTitle } from '../components/ui'
 import { suggestedLinks } from '../config/links'
 import { cn } from '../lib/cn'
-import { db, subjectsFor, useSettings, type SavedLink } from '../lib/db'
+import { db, subjectsFor, useSettings } from '../lib/db'
 import { useT } from '../lib/i18n'
 
 export default function Resources() {

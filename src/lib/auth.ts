@@ -37,6 +37,17 @@ function save(next: AuthSession | null) {
   listeners.forEach((f) => f())
 }
 
+// Another tab signed in, out, or refreshed the tokens: use its session (a stale refresh token would be rejected).
+addEventListener('storage', (e) => {
+  if (e.key !== STORE) return
+  try {
+    session = JSON.parse(e.newValue ?? 'null')
+  } catch {
+    session = null
+  }
+  listeners.forEach((f) => f())
+})
+
 export const currentUser = () => session?.user ?? null
 export const subscribeAuth = (fn: () => void) => (listeners.add(fn), () => void listeners.delete(fn))
 export const useUser = () => useSyncExternalStore(subscribeAuth, currentUser)
@@ -55,9 +66,11 @@ function storeTokens(json: TokenJson) {
 // Supabase error messages → short French/Arabic-friendly codes the UI translates.
 export class AuthError extends Error {
   code: 'rate_limit' | 'invalid_code' | 'invalid_email' | 'offline' | 'unknown'
-  constructor(code: AuthError['code'], message: string = code) {
+  status?: number
+  constructor(code: AuthError['code'], message: string = code, status?: number) {
     super(message)
     this.code = code
+    this.status = status
   }
 }
 
@@ -72,13 +85,19 @@ async function call<T>(path: string, init: RequestInit = {}, bearer?: string): P
     throw new AuthError('offline')
   }
   const text = await res.text()
-  const json = text ? JSON.parse(text) : null
+  let json
+  try {
+    json = text ? JSON.parse(text) : null
+  } catch {
+    // Not JSON: a captive portal or proxy page answered, not Supabase.
+    throw new AuthError(res.ok ? 'offline' : 'unknown', text.slice(0, 200), res.status)
+  }
   if (!res.ok) {
     const msg = `${json?.error_code ?? ''} ${json?.msg ?? json?.message ?? json?.error_description ?? ''}`
-    if (res.status === 429 || /rate.?limit/i.test(msg)) throw new AuthError('rate_limit', msg)
-    if (/otp|token|expired|invalid.*code/i.test(msg)) throw new AuthError('invalid_code', msg)
-    if (/email/i.test(msg)) throw new AuthError('invalid_email', msg)
-    throw new AuthError('unknown', msg)
+    if (res.status === 429 || /rate.?limit/i.test(msg)) throw new AuthError('rate_limit', msg, res.status)
+    if (/otp|token|expired|invalid.*code/i.test(msg)) throw new AuthError('invalid_code', msg, res.status)
+    if (/email/i.test(msg)) throw new AuthError('invalid_email', msg, res.status)
+    throw new AuthError('unknown', msg, res.status)
   }
   return json as T
 }
@@ -119,8 +138,9 @@ export async function accessToken(): Promise<string | null> {
     try {
       storeTokens(await call<TokenJson>('token?grant_type=refresh_token', { method: 'POST', body: JSON.stringify({ refresh_token: session.refresh_token }) }))
     } catch (e) {
-      if (e instanceof AuthError && e.code === 'offline') return null // keep the session; retry when online
-      save(null) // refresh token revoked or expired: sign out
+      // Only a rejected refresh token (revoked or expired) signs out. Offline, server errors,
+      // rate limits: keep the session and retry later.
+      if (e instanceof AuthError && (e.status === 400 || e.status === 401)) save(null)
       return null
     }
   }

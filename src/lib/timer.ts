@@ -28,17 +28,30 @@ export interface FinishedSession {
   goal?: string
 }
 
-/** Ends the running timer. Returns the logged focus session (for the end-of-session check-in), or null for a break. */
-export async function complete(s: Settings): Promise<FinishedSession | null> {
-  const { mode, subjectId } = s.timer
+/**
+ * Ends the running timer. Returns the logged focus session (for the end-of-session check-in), null for a
+ * break, or undefined if this end was already handled (another tab, or a render that hadn't seen it yet).
+ */
+export async function complete(s: Settings): Promise<FinishedSession | null | undefined> {
+  const { mode, subjectId, endsAt } = s.timer
+  // Claim this end atomically (IndexedDB serializes it across tabs): only one caller logs the session.
+  const claimed = await db.transaction('rw', db.settings, async () => {
+    if ((await db.settings.get(1))?.timer.endsAt !== endsAt) return false
+    await db.settings.update(1, { 'timer.endsAt': null })
+    return true
+  })
+  if (!claimed || !endsAt) return undefined
+
   const chapterId = s.timer.chapterId ?? null
   const goal = s.timer.goal?.trim() || undefined
   const focus = mode === 'pomodoro' || mode === 'custom'
   let finished: FinishedSession | null = null
   if (focus) {
-    const sessionId = await db.sessions.add({ date: today(), minutes: s.durations[mode], subjectId, chapterId, goal, at: Date.now() })
-    await markActive()
-    await completeMissions({ subjectId, chapterId })
+    // Dated when it ended, not when the app was reopened (a session ending at 23:50 belongs to that day).
+    const ended = new Date(Math.min(endsAt, Date.now()))
+    const sessionId = await db.sessions.add({ date: today(ended), minutes: s.durations[mode], subjectId, chapterId, goal, at: ended.getTime() })
+    await markActive(ended)
+    if (today(ended) === today()) await completeMissions({ subjectId, chapterId })
     finished = { sessionId: sessionId as number, subjectId, chapterId, goal }
   }
   // The goal belongs to one session: clear it once that session ends.
@@ -48,8 +61,9 @@ export async function complete(s: Settings): Promise<FinishedSession | null> {
   return finished
 }
 
+let beepCtx: AudioContext | null = null
 function beep() {
-  const ctx = new AudioContext()
+  const ctx = (beepCtx ??= new AudioContext()) // one context for the app: browsers cap how many can be open
   const o = ctx.createOscillator()
   const g = ctx.createGain()
   o.frequency.value = 880

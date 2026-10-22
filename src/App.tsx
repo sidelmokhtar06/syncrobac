@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router'
 import { AnimatePresence, m } from 'motion/react'
+import { Check, RefreshCw, AlertCircle } from 'lucide-react'
 import { LayoutGridIcon } from './components/icons/layout-grid'
 import { CheckCheckIcon } from './components/icons/check-check'
 import { TimerIcon } from './components/icons/timer'
@@ -20,6 +21,9 @@ import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { track } from './lib/insights'
+import { accountsAvailable, useUser } from './lib/auth'
+import { useSyncStatus } from './lib/sync'
+import { cn } from './lib/cn'
 
 // Each page is its own chunk (all precached by the service worker, so still offline).
 const Subjects = lazy(() => import('./pages/Subjects'))
@@ -225,6 +229,7 @@ function Shell() {
 
       <TimerWatcher onFocusDone={setFinished} />
       <Celebration session={finished} onClose={closeCelebrate} />
+      {accountsAvailable && <SyncIndicator />}
     </div>
   )
 }
@@ -277,6 +282,7 @@ function TimerWatcher({ onFocusDone }: { onFocusDone: (s: FinishedSession) => vo
     completing.current = true
     complete(s)
       .then((finished) => {
+        if (finished === undefined) return // already completed elsewhere
         notify(finished ? t('sessionDone') : t('breakDone'), finished ? t('sessionDoneSub') : t('breakDoneSub'))
         if (finished) {
           track('focus_done')
@@ -287,4 +293,49 @@ function TimerWatcher({ onFocusDone }: { onFocusDone: (s: FinishedSession) => vo
   }, [now, s, t, onFocusDone])
 
   return null
+}
+
+// ── Sync status indicator (floating cloud icon, bottom-right) ───────────
+
+function SyncIndicator() {
+  const user = useUser()
+  const sync = useSyncStatus()
+  const loc = useLocation()
+  // After a successful sync, the check shows briefly, then the indicator gets out of the way.
+  const [justSynced, setJustSynced] = useState(false)
+  useEffect(() => {
+    if (!sync.lastSync) return
+    setJustSynced(true)
+    const id = setTimeout(() => setJustSynced(false), 2000)
+    return () => clearTimeout(id)
+  }, [sync.lastSync])
+
+  // Hide on account/settings pages (they show sync status themselves)
+  if (!user || loc.pathname === '/account' || loc.pathname === '/settings') return null
+
+  const isSyncing = sync.state === 'syncing'
+  const isError = sync.state === 'error'
+  const isDone = !isSyncing && !isError && justSynced
+  const visible = isSyncing || isError || isDone
+
+  return (
+    <m.div
+      aria-hidden
+      className={cn(
+        'pointer-events-none fixed bottom-20 end-3 z-50 grid size-9 place-items-center rounded-full shadow-lg transition-colors md:bottom-6',
+        isSyncing && 'bg-accent text-bg',
+        isDone && 'bg-success text-bg',
+        isError && 'bg-danger text-bg',
+      )}
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: visible ? 1 : 0, scale: visible ? 1 : 0 }}
+      transition={{ duration: 0.3, ease: EASE }}
+    >
+      {isSyncing && <m.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+        <RefreshCw size={16} className="text-bg" />
+      </m.span>}
+      {isDone && <Check size={16} className="text-bg" />}
+      {isError && <AlertCircle size={16} className="text-bg" />}
+    </m.div>
+  )
 }

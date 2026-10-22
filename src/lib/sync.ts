@@ -1,4 +1,6 @@
+import { useSyncExternalStore } from 'react'
 import type { Table } from 'dexie'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { accessToken, currentUser, restCall, subscribeAuth } from './auth'
 import { db, type Settings } from './db'
 import { uuid } from './uuid'
@@ -67,6 +69,7 @@ const setStatus = (s: Partial<SyncStatus>) => {
 }
 export const syncStatus = () => status
 export const subscribeSync = (fn: () => void) => (statusListeners.add(fn), () => void statusListeners.delete(fn))
+export const useSyncStatus = () => useSyncExternalStore(subscribeSync, syncStatus)
 
 // Per-account sync cursors (a different account on the same phone starts fresh).
 const metaKey = () => `syncrobac-sync-${currentUser()?.id}`
@@ -101,7 +104,11 @@ async function push(meta: ReturnType<typeof readMeta>) {
   const startedAt = Date.now()
   const records: ReturnType<typeof serialize>[] = []
   for (const c of COLLECTIONS) {
-    for (const r of await table(c).toArray()) if (stamp(c, r) > meta.lastPushAt) records.push(serialize(c, r))
+    for (const r of await table(c).toArray()) {
+      // Settings without a série belong to a phone still in onboarding: never let them overwrite the account's.
+      if (c === 'settings' && !r.serie) continue
+      if (stamp(c, r) > meta.lastPushAt) records.push(serialize(c, r))
+    }
   }
   const deletions = await db.deletions.toArray()
   // A record deleted then written again (e.g. restoring a backup = clear + put) is not deleted.
@@ -140,7 +147,9 @@ async function apply(rows: RemoteRow[]) {
       for (const r of rows) {
         if (!(COLLECTIONS as readonly string[]).includes(r.collection)) continue
         const local = await findLocal(r.collection, r.id)
-        if (local && stamp(r.collection, local) >= r.client_updated_at) continue // local is newer: keep it
+        // Local is newer: keep it. Except settings of a phone still in onboarding: the account's always win.
+        const onboarding = r.collection === 'settings' && !local?.serie
+        if (local && !onboarding && stamp(r.collection, local) >= r.client_updated_at) continue
         const t = table(r.collection)
         if (r.deleted) {
           if (local) await t.delete(r.collection === 'settings' ? 1 : UID_TABLES.includes(r.collection) ? (local.id as number) : r.id)
@@ -226,4 +235,27 @@ export function startSync() {
     if (!signedIn) setStatus({ state: 'idle', lastSync: null })
     wasSignedIn = signedIn
   })
+}
+
+// ── Sync data counts (for UI display) ───────────────────────────────────
+
+export interface SyncDataCounts {
+  tasks: number
+  sessions: number
+  chapters: number
+  customChapters: number
+  links: number
+  mistakes: number
+  total: number
+}
+
+export function useSyncDataCounts(): SyncDataCounts {
+  const tasks = useLiveQuery(() => db.tasks.count(), [], 0)
+  const sessions = useLiveQuery(() => db.sessions.count(), [], 0)
+  const chapters = useLiveQuery(() => db.chapters.count(), [], 0)
+  const customChapters = useLiveQuery(() => db.customChapters.count(), [], 0)
+  const links = useLiveQuery(() => db.links.count(), [], 0)
+  const mistakes = useLiveQuery(() => db.mistakes.count(), [], 0)
+  const total = tasks + sessions + chapters + customChapters + links + mistakes
+  return { tasks, sessions, chapters, customChapters, links, mistakes, total }
 }

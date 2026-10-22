@@ -64,3 +64,16 @@ test('every main page opens without errors', async ({ page }) => {
   }
   expect(errors).toEqual([])
 })
+
+test('opening a chapter or the simulator writes nothing until the student edits', async ({ page }) => {
+  const errors = trackErrors(page)
+  await onboard(page)
+  const before = await readTable(page, 'chapters')
+  await page.goto('/subjects/maths/complexes')
+  await page.waitForTimeout(1500)
+  expect(await readTable(page, 'chapters')).toEqual(before)
+  await page.goto('/simulator')
+  await page.waitForTimeout(1500)
+  expect(await readTable(page, 'simulator')).toEqual([])
+  expect(errors).toEqual([])
+})

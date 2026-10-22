@@ -97,3 +97,28 @@ test('restoring a backup while signed in does not delete anything online', async
   expect(task?.data?.title).toBe('Tâche sauvegardée')
   expect(A.errors).toEqual([])
 })
+
+test('signing in from onboarding never overwrites the account with the unfinished settings', async ({ browser }) => {
+  const server = createFakeServer()
+  const A = await phone(browser, server)
+  await onboard(A.page)
+  await A.page.goto('/settings')
+  await A.page.getByPlaceholder('Ton prénom').fill('Aicha')
+  await A.page.getByPlaceholder('Ton prénom').blur()
+  await A.page.goto('/account')
+  await signIn(A.page, 'aicha@example.com')
+  await syncNow(A.page)
+
+  // Phone B: switching the language during onboarding writes settings (no série yet) before signing in
+  const B = await phone(browser, server)
+  await B.page.goto('/')
+  await B.page.getByRole('button', { name: 'ع' }).click()
+  await B.page.getByRole('button', { name: 'FR' }).click()
+  await B.page.getByRole('button', { name: 'J’ai déjà un compte' }).click()
+  await signIn(B.page, 'aicha@example.com')
+  await expect(B.page.locator('h1').first()).toContainText('Aicha', { timeout: 15_000 })
+  expect(server.records.get('user-1')?.get('settings/me')?.data?.serie).toBeTruthy()
+
+  expect(A.errors).toEqual([])
+  expect(B.errors).toEqual([])
+})

@@ -63,6 +63,14 @@ export async function sendFeedback(kind: FeedbackKind, message: string, contact:
 const ERR_QUEUE = 'syncrobac-errors'
 const reported = new Set<string>()
 
+const readQueue = (): ErrorReport[] => {
+  try {
+    return JSON.parse(ls.get(ERR_QUEUE) ?? '[]')
+  } catch {
+    return [] // corrupted: start over rather than throw inside the error handler
+  }
+}
+
 type ErrorReport = { message: string; stack?: string; page: string; app_version: string; user_agent: string }
 
 const IGNORED = /ResizeObserver loop|^Script error\.?$|Non-Error promise rejection|AbortError|NotAllowedError|Load failed|Failed to fetch|NetworkError/i
@@ -79,14 +87,14 @@ export function reportError(error: unknown) {
   }
   if (!insightsAvailable || IGNORED.test(message) || reported.has(message) || reported.size >= 5) return
   reported.add(message)
-  const queue: ErrorReport[] = JSON.parse(ls.get(ERR_QUEUE) ?? '[]')
+  const queue = readQueue()
   queue.push({ message, stack: e.stack?.slice(0, 4000), page: location.pathname.slice(0, 200), app_version: APP_VERSION, user_agent: navigator.userAgent.slice(0, 300) })
   ls.set(ERR_QUEUE, JSON.stringify(queue.slice(-10)))
   flushErrors()
 }
 
 async function flushErrors() {
-  const queue: ErrorReport[] = JSON.parse(ls.get(ERR_QUEUE) ?? '[]')
+  const queue = readQueue()
   if (!queue.length || !navigator.onLine) return
   ls.set(ERR_QUEUE, null)
   try {

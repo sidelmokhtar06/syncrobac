@@ -31,12 +31,21 @@ export const useToday = () =>
 // Dates in the UI language; Arabic keeps Western digits (as used in Mauritanian schools).
 export const dateLocale = (lang: 'fr' | 'ar') => (lang === 'ar' ? 'ar-u-nu-latn' : 'fr-FR')
 
-/** Save a value after the user stops typing for `delay` ms. */
+/** Save a value after the user stops typing for `delay` ms (and on leaving the page mid-typing). */
 export function useDebouncedSave<T>(value: T, onSave: (v: T) => void, delay = 500) {
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Latest callback in a ref: a new inline `onSave` each render must not restart the timer.
+  const save = useRef(onSave)
+  const pending = useRef<{ value: T } | null>(null)
   useEffect(() => {
-    if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => onSave(value), delay)
-    return () => { if (timer.current) clearTimeout(timer.current) }
-  }, [value, onSave, delay])
+    save.current = onSave
+  })
+  useEffect(() => {
+    pending.current = { value }
+    const id = setTimeout(() => {
+      pending.current = null
+      save.current(value)
+    }, delay)
+    return () => clearTimeout(id)
+  }, [value, delay])
+  useEffect(() => () => void (pending.current && save.current(pending.current.value)), [])
 }

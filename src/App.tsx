@@ -23,6 +23,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { track } from './lib/insights'
 import { accountsAvailable, useUser } from './lib/auth'
 import { useSyncStatus } from './lib/sync'
+import { applyUpdate, useUpdateWaiting } from './lib/appUpdate'
 import { cn } from './lib/cn'
 
 // Each page is its own chunk (all precached by the service worker, so still offline).
@@ -132,6 +133,8 @@ export default function App() {
           </m.div>
         )}
       </AnimatePresence>
+      {/* Outside the app/onboarding switch: an update can wait during onboarding too. */}
+      <UpdateBanner />
       </MotionConfig>
     </SettingsContext>
   )
@@ -303,6 +306,33 @@ function TimerWatcher({ onFocusDone }: { onFocusDone: (s: FinishedSession) => vo
   }, [now, s, t, onFocusDone])
 
   return null
+}
+
+// ── New version downloaded while the student was busy ───────────────────
+
+function UpdateBanner() {
+  const waiting = useUpdateWaiting()
+  const { t } = useT()
+  return (
+    <AnimatePresence>
+      {waiting && (
+        <m.div
+          role="status"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 16 }}
+          transition={{ duration: 0.3, ease: EASE }}
+          className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-line-strong bg-surface p-3 ps-4 shadow-xl md:bottom-6"
+        >
+          <RefreshCw size={18} className="shrink-0 text-accent" />
+          <span className="min-w-0 flex-1 text-sm font-medium">{t('updateReady')}</span>
+          <button onClick={applyUpdate} className="min-h-11 shrink-0 rounded-xl bg-accent px-4 text-sm font-medium text-accent-ink">
+            {t('updateNow')}
+          </button>
+        </m.div>
+      )}
+    </AnimatePresence>
+  )
 }
 
 // ── Sync status indicator (floating cloud icon, bottom-right) ───────────

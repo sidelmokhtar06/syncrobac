@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, m, useScroll, useTransform } from 'motion/react'
 import { ArrowLeft, ArrowRight, BookOpen, Check, CloudUpload, Download, ListTodo, Play, RotateCcw, Snowflake, Sparkles, X } from 'lucide-react'
 import { LogoMark, Wordmark } from '../components/Logo'
@@ -13,10 +14,10 @@ import { Anim, Button, Chip, SectionTitle } from '../components/ui'
 import { subjectColor } from '../lib/colors'
 import { cn } from '../lib/cn'
 import { ensureMissions, expectedShare, toggleMission, useAllChapters, useChapterStates, useMissions, weightedMastery } from '../lib/curriculum'
-import { subjectsFor, updateSettings, useSettings, type Mission } from '../lib/db'
+import { db, subjectsFor, updateSettings, useSettings, type Mission } from '../lib/db'
 import { dateLocale, useStreakInfo, useToday } from '../lib/hooks'
 import { useT, type TKey } from '../lib/i18n'
-import { fmt, remaining, start, useNow } from '../lib/timer'
+import { fmt, remaining, startFocus, useNow } from '../lib/timer'
 import { useInstall } from '../lib/pwa'
 import { accountsAvailable, useUser } from '../lib/auth'
 import { useScrollContainer } from '../lib/scroll'
@@ -55,20 +56,31 @@ export default function Dashboard() {
   const mastery = weightedMastery(s, all, states)
   const gap = mastery - expected
   const syncState = gap >= 0.05 ? 'ahead' : gap <= -0.05 ? 'behind' : 'inSync'
-  const showInstall = !install.installed && !s.dismissed.includes('install')
   const user = useUser()
-  // Suggest an account once the student has something worth saving.
-  const showAccountNudge = accountsAvailable && !user && streak.weekActive >= 2 && !s.dismissed.includes('account-nudge')
+  const activeDays = useLiveQuery(() => db.days.count(), []) // undefined while loading
   const [howTo, setHowTo] = useState(false)
+
+  // One reminder at a time, most important first. Closing one snoozes it (stored as `key@ISO date`).
+  const snoozed = (key: string, days: number) =>
+    s.dismissed.some((d) => d.startsWith(`${key}@`) && Date.now() - Date.parse(d.slice(key.length + 1)) < days * 86_400_000)
+  const snooze = (key: string) => updateSettings({ dismissed: [...s.dismissed.filter((d) => !d.startsWith(`${key}@`)), `${key}@${new Date().toISOString()}`] })
+  const nudge =
+    activeDays === undefined ? null // decide once known, so one card doesn't flash before another
+    // iPhone: Safari erases a website's data after 7 days without a visit, unless it's on the home screen.
+    : install.iosManual && !snoozed('install', 7) ? 'iosInstall'
+    // Progress worth saving, but only on this phone.
+    : accountsAvailable && !user && activeDays >= 2 && !snoozed('account', 7) ? 'account'
+    : !install.installed && !snoozed('install', 30) ? 'install'
+    : 'recap'
 
   const subjects = new Map(subjectsFor(s).map((x) => [x.id, x]))
   const running = s.timer.endsAt !== null
   const now = Date.now()
   const hour = new Date(now).getHours()
   const greet = hour < 17 ? t('greetMorning') : t('greetEvening')
-  const Arrow = lang === 'ar' ? ArrowLeft : ArrowRight
   const items = missions?.items ?? []
   const doneCount = items.filter((x) => x.done).length
+  const next = items.find((x) => !x.done)
 
   return (
     <Stagger className="flex flex-col gap-6">
@@ -96,6 +108,19 @@ export default function Dashboard() {
         <p className="mt-0.5 text-sm text-ink-2">{new Date(now).toLocaleDateString(dateLocale(lang), { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </Item>
 
+      <Item>
+        <NextUp
+          running={running}
+          next={next}
+          allDone={items.length > 0 && !next}
+          subjectName={next ? (subjects.get(next.subjectId)?.[lang] ?? '') : ''}
+          chapterName={next ? (all.get(next.subjectId)?.find((c) => c.id === next.chapterId)?.title[lang] ?? '') : ''}
+          subjectColor={next && subjects.get(next.subjectId) ? subjectColor(subjects.get(next.subjectId)!) : undefined}
+          minutes={s.durations.pomodoro}
+          onStart={() => next && startFocus(s, next.subjectId, next.chapterId).then(() => nav('/focus'))}
+        />
+      </Item>
+
       <Item className="card p-5">
         <div className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-2 text-sm text-ink-2">
@@ -113,58 +138,40 @@ export default function Dashboard() {
         </div>
       </Item>
 
-      <AnimatePresence>
-        {showInstall && (
-          <m.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: -24 }} transition={{ duration: 0.35, ease: EASE }} className="card flex items-center gap-3 p-4">
+      <AnimatePresence mode="wait">
+        {nudge === 'iosInstall' || nudge === 'install' ? (
+          <m.div key="install" layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: -24 }} transition={{ duration: 0.35, ease: EASE }} className={cn('card flex items-center gap-3 p-4', nudge === 'iosInstall' && 'border-warning/50')}>
             <span className="relative grid size-11 shrink-0 place-items-center rounded-xl bg-accent/12 text-accent">
               <m.span animate={{ y: [0, 3, 0] }} transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}>
                 <Download size={20} />
               </m.span>
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{t('installTitle')}</p>
-              <p className="text-xs text-ink-2">{t('installSub')}</p>
+              <p className="text-sm font-medium">{t(nudge === 'iosInstall' ? 'iosInstallTitle' : 'installTitle')}</p>
+              <p className="text-xs text-ink-2">{t(nudge === 'iosInstall' ? 'iosInstallSub' : 'installSub')}</p>
             </div>
             <Button onClick={() => (install.canPrompt ? install.prompt() : setHowTo(true))}>{t('installBtn')}</Button>
-            <button onClick={() => updateSettings({ dismissed: [...s.dismissed, 'install'] })} aria-label={t('dismiss')} className="-me-2 grid size-11 shrink-0 place-items-center text-ink-3">
+            <button onClick={() => snooze('install')} aria-label={t('dismiss')} className="-me-2 grid size-11 shrink-0 place-items-center text-ink-3">
               <X size={18} />
             </button>
           </m.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showAccountNudge && (
-          <m.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: -24 }} transition={{ duration: 0.35, ease: EASE }} className="card flex items-center gap-3 border-accent/40 p-4">
+        ) : nudge === 'account' ? (
+          <m.div key="account" layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: -24 }} transition={{ duration: 0.35, ease: EASE }} className="card flex items-center gap-3 border-accent/40 p-4">
             <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent/12 text-accent">
               <CloudUpload size={20} />
             </span>
             <Link to="/account" className="min-w-0 flex-1">
-              <span className="block text-sm font-medium">{t('saveProgress')}</span>
-              <span className="block text-xs text-ink-2">{t('benefitSafe')}</span>
+              <span className="block text-sm font-medium">{t('onlyThisPhone')}</span>
+              <span className="block text-xs text-ink-2">{t('onlyThisPhoneSub')}</span>
             </Link>
-            <button onClick={() => updateSettings({ dismissed: [...s.dismissed, 'account-nudge'] })} aria-label={t('dismiss')} className="-me-2 grid size-11 shrink-0 place-items-center text-ink-3">
+            <button onClick={() => snooze('account')} aria-label={t('dismiss')} className="-me-2 grid size-11 shrink-0 place-items-center text-ink-3">
               <X size={18} />
             </button>
           </m.div>
-        )}
+        ) : nudge === 'recap' ? (
+          <WeeklyRecap key="recap" dismissible />
+        ) : null}
       </AnimatePresence>
-
-      <WeeklyRecap dismissible />
-
-      {running && (
-        <Item>
-          <Link to="/focus" className="card flex items-center gap-3 border-accent/50 p-4">
-            <span className="relative grid size-10 place-items-center rounded-xl bg-accent/12 text-accent">
-              <m.span className="absolute inset-0 rounded-xl border border-accent" animate={{ scale: [1, 1.2], opacity: [0.7, 0] }} transition={{ duration: 1.6, repeat: Infinity }} />
-              <Play size={16} fill="currentColor" />
-            </span>
-            <span className="flex-1 text-sm text-ink-2">{t('sessionRunning')}</span>
-            <RunningTime />
-            <Arrow size={18} className="text-ink-3" />
-          </Link>
-        </Item>
-      )}
 
       <Item>
         <SectionTitle
@@ -198,7 +205,7 @@ export default function Dashboard() {
                 chapterName={all.get(mi.subjectId)?.find((c) => c.id === mi.chapterId)?.title[lang] ?? ''}
                 subjectColor={sub ? subjectColor(sub) : undefined}
                 onToggle={() => toggleMission(i)}
-                onStart={() => start(s, mi.subjectId, mi.chapterId).then(() => nav('/focus'))}
+                onStart={() => startFocus(s, mi.subjectId, mi.chapterId).then(() => nav('/focus'))}
                 to={`/subjects/${mi.subjectId}/${mi.chapterId}`}
               />
             )
@@ -250,6 +257,51 @@ export default function Dashboard() {
       <InstallSheet open={howTo} onClose={() => setHowTo(false)} ios={install.ios} />
     </Stagger>
   )
+}
+
+// The one main action of the day: the running session, else the next mission, else a free session.
+function NextUp({ running, next, allDone, subjectName, chapterName, subjectColor, minutes, onStart }: { running: boolean; next?: Mission; allDone: boolean; subjectName: string; chapterName: string; subjectColor?: string; minutes: number; onStart: () => void }) {
+  const { t, lang } = useT()
+  const Arrow = lang === 'ar' ? ArrowLeft : ArrowRight
+  if (running)
+    return (
+      <Link to="/focus" className="card flex items-center gap-3 border-accent/50 p-5">
+        <span className="relative grid size-12 place-items-center rounded-xl bg-accent/12 text-accent">
+          <m.span className="absolute inset-0 rounded-xl border border-accent" animate={{ scale: [1, 1.2], opacity: [0.7, 0] }} transition={{ duration: 1.6, repeat: Infinity }} />
+          <Play size={18} fill="currentColor" />
+        </span>
+        <span className="flex-1 text-ink-2">{t('sessionRunning')}</span>
+        <RunningTime />
+        <Arrow size={18} className="text-ink-3" />
+      </Link>
+    )
+  if (next)
+    return (
+      <div className="card flex flex-col gap-4 border-accent/40 p-5">
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-accent">
+            <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: subjectColor ?? 'currentColor' }} />
+            {t('nextUp')} · {t(KIND[next.kind].key)} · {subjectName}
+          </p>
+          <p className="mt-1 text-xl font-semibold leading-snug">{chapterName}</p>
+        </div>
+        <Button size="lg" block onClick={onStart}>
+          <Play size={18} fill="currentColor" />
+          {t('start')} · <span className="tnum">{minutes}</span> {t('minutes')}
+        </Button>
+      </div>
+    )
+  if (allDone)
+    return (
+      <div className="card flex items-center gap-3 p-4">
+        <Mascot size={48} cheer />
+        <p className="flex-1 text-sm text-success">{t('allDone')}</p>
+        <Link to="/focus" className="flex min-h-11 items-center rounded-xl border border-line-strong bg-raised px-3 text-sm font-medium">
+          {t('freeSession')}
+        </Link>
+      </div>
+    )
+  return null
 }
 
 function MissionRow({ mission, subjectName, chapterName, subjectColor, onToggle, onStart, to }: { mission: Mission; subjectName: string; chapterName: string; subjectColor?: string; onToggle: () => void; onStart: () => void; to: string }) {

@@ -4,11 +4,11 @@ import { CloudCheck, CloudOff, LogOut, RefreshCw, ShieldCheck, Smartphone, Trash
 import { AccountLogin } from '../components/AccountLogin'
 import { Item, Stagger } from '../components/motion'
 import { Button, PageHeader } from '../components/ui'
-import { accountsAvailable, deleteAccount, signOut, useUser } from '../lib/auth'
+import { accountsAvailable, deleteAccount, useUser } from '../lib/auth'
 import { cn } from '../lib/cn'
 import { dateLocale } from '../lib/hooks'
 import { useT, type TKey } from '../lib/i18n'
-import { syncNow, useSyncDataCounts, useSyncStatus } from '../lib/sync'
+import { signOutAndClear, syncNow, syncStatus, useSyncDataCounts, useSyncStatus } from '../lib/sync'
 
 /** "il y a 3 min" / "منذ 3 دقائق" */
 export function timeAgo(ts: number, lang: 'fr' | 'ar') {
@@ -142,7 +142,19 @@ export default function Account() {
 
       {/* Actions */}
       <Item className="flex flex-col gap-2">
-        <Button variant="secondary" block onClick={() => signOut()}>
+        <Button
+          variant="secondary"
+          block
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true)
+            // Save the last changes online first; if that fails, erasing them needs a yes.
+            await syncNow()
+            const saved = syncStatus().state === 'idle' && !!syncStatus().lastSync
+            if (saved || confirm(t('signOutUnsynced'))) await signOutAndClear()
+            setBusy(false)
+          }}
+        >
           <LogOut size={16} />
           {t('signOutBtn')}
         </Button>

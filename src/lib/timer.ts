@@ -12,6 +12,13 @@ export const remaining = (t: Settings['timer'], now: number) =>
 export const start = (s: Settings, subjectId = s.timer.subjectId, chapterId = subjectId === s.timer.subjectId ? (s.timer.chapterId ?? null) : null) =>
   updateSettings({ timer: { ...s.timer, subjectId, chapterId, endsAt: Date.now() + s.timer.remainingMs } })
 
+/** Starts a focus session on a chapter. After a session the timer sits on a break: switch back to focus first. */
+export const startFocus = (s: Settings, subjectId: string, chapterId: string | null) => {
+  const focus = s.timer.mode === 'pomodoro' || s.timer.mode === 'custom'
+  const timer = focus ? s.timer : { ...s.timer, mode: 'pomodoro' as const, remainingMs: s.durations.pomodoro * 60_000 }
+  return start({ ...s, timer }, subjectId, chapterId)
+}
+
 export const pause = (s: Settings) =>
   updateSettings({ timer: { ...s.timer, endsAt: null, remainingMs: remaining(s.timer, Date.now()) } })
 

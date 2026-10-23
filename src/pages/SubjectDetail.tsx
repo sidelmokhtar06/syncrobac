@@ -12,7 +12,7 @@ import { setChapter, statusOf, subjectMastery, useChapterStates, useChapters } f
 import { subjectColor } from '../lib/colors'
 import { db, subjectsFor, useSettings } from '../lib/db'
 import { useT } from '../lib/i18n'
-import { start } from '../lib/timer'
+import { startFocus } from '../lib/timer'
 
 export default function SubjectDetail() {
   const { subjectId = '' } = useParams()
@@ -56,7 +56,7 @@ export default function SubjectDetail() {
           <span>{done} / {chapters.length} {t('chapters').toLowerCase()}</span>
           <span>{data?.tasks.filter((x) => !x.done).length ?? 0} {t('tasks')} {t('pending')}</span>
         </div>
-        <Button block className="mt-4" style={{ backgroundColor: subColor }} onClick={() => start(s, subjectId, null).then(() => nav('/focus'))}>
+        <Button block className="mt-4" style={{ backgroundColor: subColor }} onClick={() => startFocus(s, subjectId, null).then(() => nav('/focus'))}>
           <Play size={16} fill="currentColor" />
           {t('focusSubject')}
         </Button>

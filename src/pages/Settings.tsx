@@ -154,6 +154,9 @@ export default function Settings() {
               )}
             </Row>
           )}
+          <Row label={t('reduceMotion')} hint={t('reduceMotionSub')}>
+            <Switch checked={!!s.reduceMotion} onChange={(v) => updateSettings({ reduceMotion: v })} label={t('reduceMotion')} />
+          </Row>
           <Row label={t('bacDate')}>
             <input
               type="date"
@@ -215,12 +218,15 @@ export default function Settings() {
   )
 }
 
-function Row({ label, icon, children }: { label: string; icon?: ReactNode; children: ReactNode }) {
+function Row({ label, hint, icon, children }: { label: string; hint?: string; icon?: ReactNode; children: ReactNode }) {
   return (
     <div role="group" aria-label={label} className="flex min-h-15 items-center justify-between gap-4 px-4 py-2">
       <span className="flex items-center gap-2 text-sm text-ink-2">
         {icon}
-        {label}
+        <span>
+          {label}
+          {hint && <span className="block text-xs text-ink-3">{hint}</span>}
+        </span>
       </span>
       {children}
     </div>

@@ -51,4 +51,7 @@ Supabase → **Authentication → URL Configuration**:
 - Synced: settings (name, série, goals, theme, language…), chapters, tasks, sessions, active days,
   custom chapters, saved links, mistake notebook. Not synced: the running timer and daily missions
   (regenerated each day).
-- Sign out keeps the data on the phone. **Supprimer mon compte** erases the online data.
+- Sign out first syncs, then erases the student's progress from the phone (it stays in the account;
+  signing in again brings it back), so the next person on a shared phone never inherits it. If the
+  final sync fails (offline), the student is asked before unsynced changes are erased.
+  **Supprimer mon compte** erases the online data.

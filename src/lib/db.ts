@@ -21,6 +21,7 @@ export interface Settings {
   timer: { mode: TimerMode; endsAt: number | null; remainingMs: number; subjectId: string | null; chapterId?: string | null; goal?: string }
   sound: 'none' | 'rain' | 'atay' | 'lofi'
   keepAwake: boolean // keep the screen on during a focus session
+  reduceMotion?: boolean // this phone only: no animations (faster on low-end phones, saves battery)
   dailyGoal: number // Pomodoros per day
   weeklyGoal: number // active days per week (gentle streak)
   name: string

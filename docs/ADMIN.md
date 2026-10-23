@@ -110,6 +110,17 @@ papers (everything else keeps working).
 Supabase → SQL Editor → run `supabase/announcements.sql` (after `security.sql`). Until then the
 Annonces section says "Indisponible" and the app shows no messages (everything else keeps working).
 
+### One-time content updates
+
+`supabase/updates/` holds dated SQL scripts that bring an existing database up to date with a
+content change made in the app (new databases already get it from `setup.sql`). Run each one once in
+Supabase → SQL Editor; they are safe to re-run.
+
+- `2026-10-series-c-d-coefficients.sql`: official subjects and coefficients of séries C and D
+  (C: Maths 9, Physique-Chimie 8, Sciences naturelles 4, Arabe 3, Français 3, Anglais 2,
+  Instruction religieuse 2 · D: Sciences naturelles 8, Physique-Chimie 7, Maths 6, Arabe 3,
+  Français 3, Anglais 2, Instruction religieuse 2; Philosophie removed from both).
+
 ## Advanced: Table Editor (like a spreadsheet)
 
 | I want to… | Table | How |

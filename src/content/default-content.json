@@ -18,9 +18,9 @@
         },
         {
           "id": "physics",
-          "fr": "Sciences physiques",
-          "ar": "العلوم الفيزيائية",
-          "coeff": 7
+          "fr": "Physique-Chimie",
+          "ar": "الفيزياء والكيمياء",
+          "coeff": 8
         },
         {
           "id": "natsci",
@@ -31,30 +31,24 @@
         {
           "id": "arabic",
           "fr": "Arabe",
-          "ar": "اللغة العربية",
+          "ar": "العربية",
           "coeff": 3
         },
         {
           "id": "french",
           "fr": "Français",
-          "ar": "اللغة الفرنسية",
-          "coeff": 2
+          "ar": "الفرنسية",
+          "coeff": 3
         },
         {
           "id": "english",
           "fr": "Anglais",
-          "ar": "اللغة الإنجليزية",
-          "coeff": 2
-        },
-        {
-          "id": "philo",
-          "fr": "Philosophie",
-          "ar": "الفلسفة",
+          "ar": "الإنجليزية",
           "coeff": 2
         },
         {
           "id": "islamic",
-          "fr": "Instruction islamique",
+          "fr": "Instruction religieuse",
           "ar": "التربية الإسلامية",
           "coeff": 2
         }
@@ -71,7 +65,13 @@
           "id": "natsci",
           "fr": "Sciences naturelles",
           "ar": "العلوم الطبيعية",
-          "coeff": 9
+          "coeff": 8
+        },
+        {
+          "id": "physics",
+          "fr": "Physique-Chimie",
+          "ar": "الفيزياء والكيمياء",
+          "coeff": 7
         },
         {
           "id": "maths",
@@ -80,38 +80,26 @@
           "coeff": 6
         },
         {
-          "id": "physics",
-          "fr": "Sciences physiques",
-          "ar": "العلوم الفيزيائية",
-          "coeff": 6
-        },
-        {
           "id": "arabic",
           "fr": "Arabe",
-          "ar": "اللغة العربية",
+          "ar": "العربية",
           "coeff": 3
         },
         {
           "id": "french",
           "fr": "Français",
-          "ar": "اللغة الفرنسية",
-          "coeff": 2
+          "ar": "الفرنسية",
+          "coeff": 3
         },
         {
           "id": "english",
           "fr": "Anglais",
-          "ar": "اللغة الإنجليزية",
-          "coeff": 2
-        },
-        {
-          "id": "philo",
-          "fr": "Philosophie",
-          "ar": "الفلسفة",
+          "ar": "الإنجليزية",
           "coeff": 2
         },
         {
           "id": "islamic",
-          "fr": "Instruction islamique",
+          "fr": "Instruction religieuse",
           "ar": "التربية الإسلامية",
           "coeff": 2
         }
@@ -379,31 +367,6 @@
             "id": "sira",
             "fr": "Sīra et éthique",
             "ar": "السيرة والأخلاق"
-          }
-        ]
-      },
-      "philo": {
-        "source": "generic",
-        "chapters": [
-          {
-            "id": "methode-dissert",
-            "fr": "Méthode : dissertation",
-            "ar": "المنهجية: المقالة الفلسفية"
-          },
-          {
-            "id": "methode-texte",
-            "fr": "Méthode : analyse de texte",
-            "ar": "المنهجية: تحليل النص"
-          },
-          {
-            "id": "notions",
-            "fr": "Notions du programme",
-            "ar": "مفاهيم البرنامج"
-          },
-          {
-            "id": "auteurs",
-            "fr": "Auteurs et citations",
-            "ar": "الفلاسفة والأقوال"
           }
         ]
       },
@@ -746,31 +709,6 @@
             "id": "sira",
             "fr": "Sīra et éthique",
             "ar": "السيرة والأخلاق"
-          }
-        ]
-      },
-      "philo": {
-        "source": "generic",
-        "chapters": [
-          {
-            "id": "methode-dissert",
-            "fr": "Méthode : dissertation",
-            "ar": "المنهجية: المقالة الفلسفية"
-          },
-          {
-            "id": "methode-texte",
-            "fr": "Méthode : analyse de texte",
-            "ar": "المنهجية: تحليل النص"
-          },
-          {
-            "id": "notions",
-            "fr": "Notions du programme",
-            "ar": "مفاهيم البرنامج"
-          },
-          {
-            "id": "auteurs",
-            "fr": "Auteurs et citations",
-            "ar": "الفلاسفة والأقوال"
           }
         ]
       },

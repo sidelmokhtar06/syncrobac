@@ -12,6 +12,7 @@ import { GraduationCapIcon } from '../components/icons/graduation-cap'
 import { Burst, CountUp, EASE, Item, Rolling, Stagger, spring } from '../components/motion'
 import { Anim, Button, Chip, SectionTitle } from '../components/ui'
 import { subjectColor } from '../lib/colors'
+import { getSerie, isOpenSerie, openSeries } from '../config/bac'
 import { cn } from '../lib/cn'
 import { ensureMissions, expectedShare, toggleMission, useAllChapters, useChapterStates, useMissions, weightedMastery } from '../lib/curriculum'
 import { db, subjectsFor, updateSettings, useSettings, type Mission } from '../lib/db'
@@ -107,6 +108,12 @@ export default function Dashboard() {
         <h1 className="text-2xl">{s.name ? `${greet}${lang === 'ar' ? '،' : ','} ${s.name}` : greet}</h1>
         <p className="mt-0.5 text-sm text-ink-2">{new Date(now).toLocaleDateString(dateLocale(lang), { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </Item>
+
+      {!isOpenSerie(s.serie) && (
+        <Item>
+          <SerieClosed />
+        </Item>
+      )}
 
       <Item>
         <NextUp
@@ -256,6 +263,29 @@ export default function Dashboard() {
       </Item>
       <InstallSheet open={howTo} onClose={() => setHowTo(false)} ios={install.ios} />
     </Stagger>
+  )
+}
+
+// A student whose série isn't open yet (it was before C/D-only) is asked to pick an open one.
+function SerieClosed() {
+  const s = useSettings()
+  const { t, lang } = useT()
+  return (
+    <div role="alert" className="card flex flex-col gap-3 border-warning/50 p-5">
+      <div>
+        <p className="font-semibold">
+          {t('serieClosedTitle')} <span className="text-ink-3">({s.serie} · {getSerie(s.serie!)[lang]})</span>
+        </p>
+        <p className="mt-1 text-sm text-ink-2">{t('serieClosedSub')}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {openSeries().map((x) => (
+          <Button key={x.id} onClick={() => updateSettings({ serie: x.id })}>
+            {t('switchToSerie')} {x.id}
+          </Button>
+        ))}
+      </div>
+    </div>
   )
 }
 

@@ -143,7 +143,8 @@ test('signing out erases the progress from the phone, signing back in restores i
 
   await A.page.getByRole('button', { name: 'J’ai déjà un compte' }).click()
   await signIn(A.page, 'aicha@example.com')
+  await expect(A.page.getByRole('navigation').first()).toBeVisible({ timeout: 15_000 }) // first sync done: the app opens
   await A.page.goto('/subjects/maths/complexes')
-  await expect(A.page.getByText('Tâche privée')).toBeVisible({ timeout: 15_000 })
+  await expect(A.page.getByText('Tâche privée')).toBeVisible()
   expect(A.errors).toEqual([])
 })

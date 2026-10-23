@@ -661,7 +661,7 @@ function ExamsAdmin({ save }: { save: Save }) {
 // ── Subjects & coefficients per série ───────────────────────────────────
 
 function SubjectsAdmin({ save }: { save: Save }) {
-  const { rows: series } = useTable('series?select=*&order=position')
+  const { rows: series, reload: reloadSeries } = useTable('series?select=*&order=position')
   const [serie, setSerie] = useState<string>('')
   useEffect(() => void (series?.length && !serie && setSerie(series[0].id)), [series, serie])
   const { rows, reload } = useTable(serie ? `serie_subjects?serie_id=eq.${serie}&select=*,subjects(*)&order=position` : null)
@@ -675,6 +675,20 @@ function SubjectsAdmin({ save }: { save: Save }) {
   return (
     <div className="flex flex-col gap-4">
       {series && <Segmented id="adm-serie" value={serie} onChange={setSerie} options={SERIE_OPTIONS(series)} />}
+      {series?.find((x) => x.id === serie) && (
+        <label className="card flex min-h-15 items-center gap-3 px-4 py-2 text-sm">
+          <input
+            type="checkbox"
+            checked={series.find((x) => x.id === serie)!.active}
+            onChange={(e) => save(() => api(`series?id=eq.${serie}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ active: e.target.checked }) })).then(reloadSeries)}
+            className="size-5 accent-accent"
+          />
+          <span className="flex-1">
+            Série {serie} ouverte aux élèves
+            <span className="block text-xs text-ink-3">Fermée : absente de l’inscription (« Bientôt »), et ses élèves sont invités à passer dans une série ouverte. Ses données sont conservées.</span>
+          </span>
+        </label>
+      )}
       <SectionTitle action={<Button variant="secondary" onClick={() => setAdding({ subject: available[0]?.id ?? '__new', newId: '', fr: '', ar: '', coeff: 2 })}><Plus size={16} /> Matière</Button>}>
         Matières et coefficients
       </SectionTitle>

@@ -20,6 +20,7 @@ export interface SubjectDef {
 export interface SerieDef {
   id: string
   code: string
+  active?: boolean // false = not open to new students yet (data kept for later); absent = open
   fr: string
   ar: string
   subjects: SubjectDef[]
@@ -104,7 +105,7 @@ async function get<T>(path: string): Promise<T> {
 export async function fetchRemoteContent(): Promise<ContentBundle> {
   if (!remoteConfigured) throw new Error('Supabase not configured')
   const [series, serieSubjects, chapters, resources, config, exams] = await Promise.all([
-    get<Row[]>('series?select=*&active=eq.true&order=position'),
+    get<Row[]>('series?select=*&order=position'), // closed séries too: their students are asked to switch
     get<Row[]>('serie_subjects?select=*,subjects(*)&order=position'),
     get<Row[]>('chapters?select=*&order=position'),
     get<Row[]>('resources?select=*&published=eq.true&order=position'),

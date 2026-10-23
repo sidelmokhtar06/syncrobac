@@ -6,6 +6,7 @@
     {
       "id": "C",
       "code": "M",
+      "active": true,
       "fr": "Mathématiques",
       "ar": "الرياضيات",
       "subjects": [
@@ -62,6 +63,7 @@
     {
       "id": "D",
       "code": "SN",
+      "active": true,
       "fr": "Sciences naturelles",
       "ar": "العلوم الطبيعية",
       "subjects": [
@@ -118,6 +120,7 @@
     {
       "id": "TM",
       "code": "TM",
+      "active": false,
       "fr": "Technique mathématique",
       "ar": "الرياضيات التقنية",
       "subjects": [
@@ -168,6 +171,7 @@
     {
       "id": "LM",
       "code": "LM",
+      "active": false,
       "fr": "Lettres modernes",
       "ar": "الآداب العصرية",
       "subjects": [
@@ -218,6 +222,7 @@
     {
       "id": "LO",
       "code": "LO",
+      "active": false,
       "fr": "Lettres originales",
       "ar": "الآداب الأصلية",
       "subjects": [

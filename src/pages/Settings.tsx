@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { enableAdminEntry } from '../lib/adminEntry'
 import { BellRing, Download, Monitor, Moon, Sun, Trash2, Upload } from 'lucide-react'
 import { enableNotifications, notifyPermission, notifySupported } from '../lib/pwa'
@@ -7,7 +7,7 @@ import { LanguagesIcon } from '../components/icons/languages'
 import { Item, Stagger } from '../components/motion'
 import { Anim, Button, Chip, PageHeader, SectionTitle, Segmented, Select, Switch, inputClass } from '../components/ui'
 import { insightsAvailable, setStatsEnabled, statsEnabled } from '../lib/insights'
-import { listSeries } from '../config/bac'
+import { comingSeries, getSerie, isOpenSerie, openSeries } from '../config/bac'
 import { cn } from '../lib/cn'
 import { db, today, updateSettings, useSettings, type Lang } from '../lib/db'
 import { useT } from '../lib/i18n'
@@ -101,13 +101,28 @@ export default function Settings() {
           </Row>
           <Row label={t('serie')}>
             <Select aria-label={t('serie')} value={s.serie!} onChange={(e) => updateSettings({ serie: e.target.value as typeof s.serie })} className="w-44">
-              {listSeries().map((x) => (
+              {!isOpenSerie(s.serie) && s.serie && (
+                <option value={s.serie} disabled>
+                  {s.serie} · {getSerie(s.serie)[lang]}
+                </option>
+              )}
+              {openSeries().map((x) => (
                 <option key={x.id} value={x.id}>
                   {x.id} · {x[lang]}
                 </option>
               ))}
             </Select>
           </Row>
+          {comingSeries().length > 0 && (
+            <p className="flex flex-wrap items-center justify-between gap-x-3 px-4 py-2 text-xs text-ink-3">
+              {t('comingSeriesNote')} ({comingSeries().map((x) => x.id).join(', ')})
+              {insightsAvailable && (
+                <Link to="/feedback" className="flex min-h-11 items-center font-medium text-accent">
+                  {t('askMySerie')}
+                </Link>
+              )}
+            </p>
+          )}
         </div>
       </Item>
 

@@ -25,6 +25,7 @@ export function assembleBundle({ series, serieSubjects, chapters, resources, con
     series: series.map((s) => ({
       id: s.id as string,
       code: s.code as string,
+      active: s.active !== false,
       fr: s.name_fr as string,
       ar: s.name_ar as string,
       subjects: serieSubjects

@@ -218,6 +218,8 @@ export function syncNow(): Promise<void> {
 export async function signOutAndClear() {
   const id = currentUser()?.id
   clearTimeout(timer)
+  const loggedOut = signOut() // signed out at once: no new sync can start…
+  await running // …and one already running finishes before we erase (it could write pulled rows back)
   applyingRemote = true // erasing is not a deletion to sync: no tombstones
   try {
     const tables = db.tables.filter((t) => t.name !== 'content')
@@ -232,7 +234,7 @@ export async function signOutAndClear() {
   } catch {
     /* ignore */
   }
-  await signOut()
+  await loggedOut
 }
 
 let timer: ReturnType<typeof setTimeout> | undefined

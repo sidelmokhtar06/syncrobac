@@ -70,6 +70,9 @@ laptop the sections are listed on the left; on a phone they scroll horizontally.
   year filter.
 - **Matières**: per série, change coefficients, programme status (officiel / provisoire /
   générique), order, add an existing or new subject, remove one.
+  Each série can be **opened or closed** to students. SyncroBac launches with C and D open; TM,
+  LM and LO are closed (shown as « Bientôt » in onboarding) but keep all their data, so opening one
+  later is a single tick. Students already in a closed série are asked to switch to an open one.
 - **Chapitres**: per série + subject, rename (FR/AR), set official weeks, reorder, add, delete.
 - **Retours**: messages students send from Profil → Donner mon avis (mark as treated, delete;
   a WhatsApp number or email opens directly), and crash reports grouped by error with the page,

@@ -116,9 +116,10 @@ Annonces section says "Indisponible" and the app shows no messages (everything e
 content change made in the app (new databases already get it from `setup.sql`). Run each one once in
 Supabase → SQL Editor; they are safe to re-run.
 
-- `2026-10-serie-c-coefficients.sql`: série C official subjects and coefficients (Maths 9,
-  Physique-Chimie 8, Sciences naturelles 4, Arabe 3, Français 3, Anglais 2, Instruction religieuse 2;
-  Philosophie removed from C).
+- `2026-10-series-c-d-coefficients.sql`: official subjects and coefficients of séries C and D
+  (C: Maths 9, Physique-Chimie 8, Sciences naturelles 4, Arabe 3, Français 3, Anglais 2,
+  Instruction religieuse 2 · D: Sciences naturelles 8, Physique-Chimie 7, Maths 6, Arabe 3,
+  Français 3, Anglais 2, Instruction religieuse 2; Philosophie removed from both).
 
 ## Advanced: Table Editor (like a spreadsheet)
 

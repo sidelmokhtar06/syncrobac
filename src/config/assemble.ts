@@ -1,4 +1,4 @@
-import type { ContentBundle, LinkDef, Source } from './content'
+import type { ContentBundle, ExamDef, LinkDef, Source } from './content'
 
 // Pure: turns Supabase (PostgREST) rows into a ContentBundle. No imports with side effects,
 // so it can be tested directly with Node (scripts/test-assemble.mts).
@@ -13,9 +13,10 @@ export interface Tables {
   chapters: Row[]
   resources: Row[]
   config: Row[]
+  exams?: Row[]
 }
 
-export function assembleBundle({ series, serieSubjects, chapters, resources, config }: Tables, fallbackBacDate: string): ContentBundle {
+export function assembleBundle({ series, serieSubjects, chapters, resources, config, exams = [] }: Tables, fallbackBacDate: string, examFileBase = ''): ContentBundle {
   const cfg = Object.fromEntries(config.map((r) => [r.key as string, r.value]))
   const bundle: ContentBundle = {
     version: Number(cfg.content_version ?? 1),
@@ -24,6 +25,7 @@ export function assembleBundle({ series, serieSubjects, chapters, resources, con
     series: series.map((s) => ({
       id: s.id as string,
       code: s.code as string,
+      active: s.active !== false,
       fr: s.name_fr as string,
       ar: s.name_ar as string,
       subjects: serieSubjects
@@ -44,6 +46,18 @@ export function assembleBundle({ series, serieSubjects, chapters, resources, con
       serie: (r.serie_id as string) ?? null,
       subject: (r.subject_id as string) ?? null,
     })),
+    exams: exams
+      .map((r): ExamDef => ({
+        id: Number(r.id),
+        serie: (r.serie_id as string) ?? null,
+        subject: r.subject_id as string,
+        year: Number(r.year),
+        session: r.session === 'complementaire' ? 'complementaire' : 'normale',
+        kind: r.kind === 'solution' ? 'solution' : 'subject',
+        title: (r.title as string) || undefined,
+        url: r.file_path ? examFileBase + String(r.file_path) : String(r.url ?? ''),
+      }))
+      .filter((e) => /^https:\/\/[^\s]+$/i.test(e.url)),
   }
   for (const x of serieSubjects) {
     const serie = x.serie_id as string

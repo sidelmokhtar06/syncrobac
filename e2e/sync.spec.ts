@@ -122,3 +122,29 @@ test('signing in from onboarding never overwrites the account with the unfinishe
   expect(A.errors).toEqual([])
   expect(B.errors).toEqual([])
 })
+
+test('signing out erases the progress from the phone, signing back in restores it', async ({ browser }) => {
+  const server = createFakeServer()
+  const A = await phone(browser, server)
+  await onboard(A.page)
+  await A.page.goto('/subjects/maths/complexes')
+  await A.page.getByPlaceholder('Ajouter une tâche…').fill('Tâche privée')
+  await A.page.keyboard.press('Enter')
+  await A.page.goto('/account')
+  await signIn(A.page, 'aicha@example.com')
+  await syncNow(A.page)
+
+  await A.page.getByRole('button', { name: 'Se déconnecter' }).click()
+  await expect(A.page.getByRole('button', { name: 'J’ai déjà un compte' })).toBeVisible() // back to a fresh phone
+  expect(await readTable(A.page, 'tasks')).toEqual([])
+  expect(await readTable(A.page, 'deletions')).toEqual([])
+  const task = [...server.records.get('user-1')!.values()].find((r) => r.collection === 'tasks')
+  expect(task?.deleted).toBe(false) // erasing the phone deletes nothing online
+
+  await A.page.getByRole('button', { name: 'J’ai déjà un compte' }).click()
+  await signIn(A.page, 'aicha@example.com')
+  await expect(A.page.getByRole('navigation').first()).toBeVisible({ timeout: 15_000 }) // first sync done: the app opens
+  await A.page.goto('/subjects/maths/complexes')
+  await expect(A.page.getByText('Tâche privée')).toBeVisible()
+  expect(A.errors).toEqual([])
+})

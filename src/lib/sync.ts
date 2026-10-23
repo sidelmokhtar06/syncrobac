@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { Table } from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { accessToken, currentUser, restCall, subscribeAuth } from './auth'
+import { accessToken, currentUser, restCall, signOut, subscribeAuth } from './auth'
 import { db, type Settings } from './db'
 import { uuid } from './uuid'
 
@@ -208,6 +208,33 @@ export function syncNow(): Promise<void> {
     }
   })().finally(() => (running = null))
   return running
+}
+
+/**
+ * "Se déconnecter": erases the student's progress from this phone (it stays in their account), so the
+ * next person to use the phone never sees it or merges it into their own account. Downloaded content stays.
+ * Call after a final sync (unsynced changes are lost).
+ */
+export async function signOutAndClear() {
+  const id = currentUser()?.id
+  clearTimeout(timer)
+  const loggedOut = signOut() // signed out at once: no new sync can start…
+  await running // …and one already running finishes before we erase (it could write pulled rows back)
+  applyingRemote = true // erasing is not a deletion to sync: no tombstones
+  try {
+    const tables = db.tables.filter((t) => t.name !== 'content')
+    await db.transaction('rw', tables, async () => {
+      for (const t of tables) await t.clear()
+    })
+  } finally {
+    applyingRemote = false
+  }
+  try {
+    localStorage.removeItem(`syncrobac-sync-${id}`) // signing in again pulls everything back
+  } catch {
+    /* ignore */
+  }
+  await loggedOut
 }
 
 let timer: ReturnType<typeof setTimeout> | undefined

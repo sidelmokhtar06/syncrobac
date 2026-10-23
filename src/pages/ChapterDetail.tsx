@@ -10,7 +10,7 @@ import { Button, PageHeader, Segmented, SectionTitle } from '../components/ui'
 import { chapterKey, setChapter, useChapters } from '../lib/curriculum'
 import { db, subjectsFor, useSettings, type ChapterStatus, type Confidence } from '../lib/db'
 import { useT } from '../lib/i18n'
-import { start } from '../lib/timer'
+import { startFocus } from '../lib/timer'
 import { useDebouncedSave } from '../lib/hooks'
 
 export default function ChapterDetail() {
@@ -90,7 +90,7 @@ export default function ChapterDetail() {
             </p>
           </div>
         </div>
-        <Button block onClick={() => start(s, subjectId, chapterId).then(() => nav('/focus'))}>
+        <Button block onClick={() => startFocus(s, subjectId, chapterId).then(() => nav('/focus'))}>
           <Play size={16} fill="currentColor" />
           {t('focusThis')}
         </Button>

@@ -163,3 +163,29 @@ export function slugKey(title: string, taken: Set<string>) {
   for (let i = 2; taken.has(key); i++) key = `${base}-${i}`
   return key
 }
+
+// ── Annales (PDF storage) ───────────────────────────────────────────────
+// Files go to the public `exam-papers` bucket; only an admin with two-factor may write (supabase/exams.sql).
+
+export const EXAM_MAX_BYTES = 20 * 1024 * 1024
+
+/** Uploads a PDF under `path` (e.g. "c/maths/2024-normale-subject-k3x9.pdf"). Never overwrites an existing file. */
+export async function uploadExamFile(path: string, file: File) {
+  if (file.type !== 'application/pdf') throw new Error('Seuls les fichiers PDF sont acceptés.')
+  if (file.size > EXAM_MAX_BYTES) throw new Error('Fichier trop lourd (20 Mo maximum).')
+  const res = await fetch(`${URL}/storage/v1/object/exam-papers/${path}`, {
+    method: 'POST',
+    headers: { apikey: KEY!, Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/pdf', 'x-upsert': 'false' },
+    body: file,
+  })
+  if (!res.ok) {
+    const json = await res.json().catch(() => null)
+    if (res.status === 401 || res.status === 403) throw new Error('Envoi refusé : exécute supabase/exams.sql et vérifie que tu es administrateur.')
+    throw new Error(json?.message ?? `Envoi impossible (${res.status})`)
+  }
+}
+
+export async function deleteExamFile(path: string) {
+  const res = await fetch(`${URL}/storage/v1/object/exam-papers/${path}`, { method: 'DELETE', headers: { apikey: KEY!, Authorization: `Bearer ${await token()}` } })
+  if (!res.ok && res.status !== 404) throw new Error(`Suppression du fichier impossible (${res.status})`)
+}

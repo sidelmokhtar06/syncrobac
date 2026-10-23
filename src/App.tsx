@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router'
-import { AnimatePresence, m } from 'motion/react'
+import { AnimatePresence, MotionConfig, m } from 'motion/react'
 import { Check, RefreshCw, AlertCircle } from 'lucide-react'
 import { LayoutGridIcon } from './components/icons/layout-grid'
 import { CheckCheckIcon } from './components/icons/check-check'
@@ -104,6 +104,12 @@ export default function App() {
     return () => media.removeEventListener('change', apply)
   }, [s?.theme])
 
+  // "Réduire les animations": Motion animations below, CSS transitions via index.css.
+  const motion = s ? (s.reduceMotion ? 'reduced' : 'full') : null
+  useEffect(() => {
+    if (motion) document.documentElement.dataset.motion = motion
+  }, [motion])
+
   useEffect(() => {
     if (!s) return
     document.documentElement.lang = s.lang
@@ -113,6 +119,7 @@ export default function App() {
   if (!s) return null
   return (
     <SettingsContext value={s}>
+      <MotionConfig reducedMotion={s.reduceMotion ? 'always' : 'user'}>
       <AnimatePresence mode="wait">
         {s.serie ? (
           <m.div key="app" className="h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
@@ -124,6 +131,7 @@ export default function App() {
           </m.div>
         )}
       </AnimatePresence>
+      </MotionConfig>
     </SettingsContext>
   )
 }

@@ -20,6 +20,7 @@ export interface SubjectDef {
 export interface SerieDef {
   id: string
   code: string
+  active?: boolean // false = not open to new students yet (data kept for later); absent = open
   fr: string
   ar: string
   subjects: SubjectDef[]
@@ -47,6 +48,18 @@ export interface LinkDef {
   subject?: string | null
 }
 
+// A past BAC paper (annale): the subject (sujet) or its solution (corrigé), as a PDF link.
+export interface ExamDef {
+  id: number
+  serie: string | null // null = every série
+  subject: string
+  year: number
+  session: 'normale' | 'complementaire'
+  kind: 'subject' | 'solution'
+  title?: string
+  url: string
+}
+
 export interface ContentBundle {
   version: number
   updatedAt: string
@@ -54,6 +67,7 @@ export interface ContentBundle {
   series: SerieDef[]
   programme: Record<string, Record<string, SubjectProgramme>>
   links: LinkDef[]
+  exams?: ExamDef[] // absent in bundles cached before annales existed
 }
 
 export const DEFAULT_CONTENT = defaults as ContentBundle
@@ -78,6 +92,8 @@ export function subscribeContent(fn: () => void) {
 const URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 export const remoteConfigured = !!(URL && KEY)
+// Uploaded annales are served from the public `exam-papers` storage bucket.
+export const examFileBase = `${URL}/storage/v1/object/public/exam-papers/`
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${URL}/rest/v1/${path}`, { headers: { apikey: KEY!, Authorization: `Bearer ${KEY}` } })
@@ -88,12 +104,14 @@ async function get<T>(path: string): Promise<T> {
 /** Fetches the tables and assembles a bundle. Throws if anything looks wrong (we then keep the cache). */
 export async function fetchRemoteContent(): Promise<ContentBundle> {
   if (!remoteConfigured) throw new Error('Supabase not configured')
-  const [series, serieSubjects, chapters, resources, config] = await Promise.all([
-    get<Row[]>('series?select=*&active=eq.true&order=position'),
+  const [series, serieSubjects, chapters, resources, config, exams] = await Promise.all([
+    get<Row[]>('series?select=*&order=position'), // closed séries too: their students are asked to switch
     get<Row[]>('serie_subjects?select=*,subjects(*)&order=position'),
     get<Row[]>('chapters?select=*&order=position'),
     get<Row[]>('resources?select=*&published=eq.true&order=position'),
     get<Row[]>('app_config?select=*'),
+    // Optional: before supabase/exams.sql is run the table doesn't exist, and the rest still loads.
+    get<Row[]>('exam_papers?select=*&published=eq.true&order=year.desc,session,kind').catch(() => []),
   ])
-  return assembleBundle({ series, serieSubjects, chapters, resources, config }, DEFAULT_CONTENT.bacDate)
+  return assembleBundle({ series, serieSubjects, chapters, resources, config, exams }, DEFAULT_CONTENT.bacDate, examFileBase)
 }

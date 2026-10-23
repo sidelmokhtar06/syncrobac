@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, m } from 'motion/react'
 import { ArrowLeft, ArrowRight, Bell, BellRing, Check, ChevronDown, Download, Share } from 'lucide-react'
-import { getSerie, listSeries, type SerieId } from '../config/bac'
+import { comingSeries, getSerie, openSeries, type SerieId } from '../config/bac'
 import { LogoMark, Wordmark } from '../components/Logo'
 import { LogoHero } from '../components/LogoHero'
 import { AccountLogin } from '../components/AccountLogin'
@@ -168,7 +168,7 @@ export default function Onboarding() {
             {current === 'serie' && (
               <Step title={t('chooseSerie')} sub={t('chooseSerieSub')}>
                 <div role="radiogroup" className="flex flex-col gap-3">
-                  {listSeries().map((x, i) => {
+                  {openSeries().map((x, i) => {
                     const on = serie === x.id
                     return (
                       <m.button
@@ -201,6 +201,13 @@ export default function Onboarding() {
                       </m.button>
                     )
                   })}
+                  {comingSeries().map((x) => (
+                    <div key={x.id} aria-disabled className="flex min-h-14 items-center gap-4 rounded-2xl border border-dashed border-line px-4 text-ink-3">
+                      <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-raised font-semibold">{x.id}</span>
+                      <span className="min-w-0 flex-1 truncate">{x[lang]}</span>
+                      <span className="rounded-full bg-raised px-2.5 py-1 text-xs">{t('comingSoon')}</span>
+                    </div>
+                  ))}
                 </div>
               </Step>
             )}

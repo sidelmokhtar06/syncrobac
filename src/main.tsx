@@ -6,7 +6,7 @@ import '@fontsource-variable/readex-pro'
 import './index.css'
 import './lib/pwa' // capture the install prompt before any page mounts
 import App from './App.tsx'
-import { loadCachedContent, refreshContent } from './lib/contentSync'
+import { loadCachedContent, refreshContent, refreshContentIfStale } from './lib/contentSync'
 import { handleAuthRedirect } from './lib/auth'
 import { installSyncHooks, startSync } from './lib/sync'
 import { startInsights } from './lib/insights'
@@ -17,6 +17,7 @@ startInsights()
 // Admin-managed content: cached copy first (instant, offline), then refresh in the background.
 await loadCachedContent()
 refreshContent()
+document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && refreshContentIfStale())
 
 // Accounts: pick up a Google sign-in redirect, track local changes, sync in the background.
 handleAuthRedirect()

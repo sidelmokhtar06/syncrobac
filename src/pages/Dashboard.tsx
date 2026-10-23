@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, m, useScroll, useTransform } from 'motion/react'
-import { ArrowLeft, ArrowRight, BookOpen, Check, CloudUpload, Download, ListTodo, Play, RotateCcw, Snowflake, Sparkles, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Bell, BookOpen, Check, CloudUpload, Download, ListTodo, Play, RotateCcw, Snowflake, Sparkles, X } from 'lucide-react'
 import { LogoMark, Wordmark } from '../components/Logo'
 import { Mascot } from '../components/Mascot'
 import { InstallSheet } from '../components/InstallSheet'
 import { WeeklyRecap } from '../components/WeeklyRecap'
+import { AnnouncementCard } from '../components/AnnouncementCard'
+import { announcementsFor, isUnread, markRead } from '../lib/announcements'
 import { FlameIcon } from '../components/icons/flame'
 import { GraduationCapIcon } from '../components/icons/graduation-cap'
 import { Burst, CountUp, EASE, Item, Rolling, Stagger, spring } from '../components/motion'
@@ -65,8 +67,11 @@ export default function Dashboard() {
   const snoozed = (key: string, days: number) =>
     s.dismissed.some((d) => d.startsWith(`${key}@`) && Date.now() - Date.parse(d.slice(key.length + 1)) < days * 86_400_000)
   const snooze = (key: string) => updateSettings({ dismissed: [...s.dismissed.filter((d) => !d.startsWith(`${key}@`)), `${key}@${new Date().toISOString()}`] })
+  const news = announcementsFor(s).filter((a) => isUnread(s, a))
   const nudge =
     activeDays === undefined ? null // decide once known, so one card doesn't flash before another
+    // A new message from SyncroBac comes first.
+    : news.length ? 'news'
     // iPhone: Safari erases a website's data after 7 days without a visit, unless it's on the home screen.
     : install.iosManual && !snoozed('install', 7) ? 'iosInstall'
     // Progress worth saving, but only on this phone.
@@ -96,12 +101,18 @@ export default function Dashboard() {
           <LogoMark animated className="h-7 w-auto" />
           <Wordmark animated delay={0.4} className="text-base" />
         </div>
-        <Link to="/progress" aria-label={t('progress')}>
-          <Chip tone={streak.current ? 'warning' : 'neutral'} className="h-9 px-3 text-sm">
-            <Anim icon={FlameIcon} size={18} autoplay play={streak.current} />
-            <span className="tnum">{streak.current}</span>
-          </Chip>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/messages" aria-label={news.length ? `${t('announcements')} (${news.length})` : t('announcements')} className="relative grid size-9 place-items-center rounded-full bg-raised text-ink-2">
+            <Bell size={18} />
+            {news.length > 0 && <span className="tnum absolute -top-1 -end-1 grid min-w-4.5 place-items-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white">{news.length}</span>}
+          </Link>
+          <Link to="/progress" aria-label={t('progress')}>
+            <Chip tone={streak.current ? 'warning' : 'neutral'} className="h-9 px-3 text-sm">
+              <Anim icon={FlameIcon} size={18} autoplay play={streak.current} />
+              <span className="tnum">{streak.current}</span>
+            </Chip>
+          </Link>
+        </div>
       </m.div>
 
       <Item className="-mt-2">
@@ -146,7 +157,19 @@ export default function Dashboard() {
       </Item>
 
       <AnimatePresence mode="wait">
-        {nudge === 'iosInstall' || nudge === 'install' ? (
+        {nudge === 'news' ? (
+          <m.div key={`news-${news[0].id}`} layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: -24 }} transition={{ duration: 0.35, ease: EASE }}>
+            <AnnouncementCard
+              a={news[0]}
+              unread
+              action={
+                <button onClick={() => markRead(s, [news[0].id])} aria-label={t('dismiss')} className="-me-2 -mt-2 grid size-11 shrink-0 place-items-center text-ink-3">
+                  <X size={18} />
+                </button>
+              }
+            />
+          </m.div>
+        ) : nudge === 'iosInstall' || nudge === 'install' ? (
           <m.div key="install" layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginTop: -24 }} transition={{ duration: 0.35, ease: EASE }} className={cn('card flex items-center gap-3 p-4', nudge === 'iosInstall' && 'border-warning/50')}>
             <span className="relative grid size-11 shrink-0 place-items-center rounded-xl bg-accent/12 text-accent">
               <m.span animate={{ y: [0, 3, 0] }} transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}>

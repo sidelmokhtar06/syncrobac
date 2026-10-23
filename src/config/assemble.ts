@@ -1,4 +1,4 @@
-import type { ContentBundle, ExamDef, LinkDef, Source } from './content'
+import type { AnnouncementDef, ContentBundle, ExamDef, LinkDef, Source } from './content'
 
 // Pure: turns Supabase (PostgREST) rows into a ContentBundle. No imports with side effects,
 // so it can be tested directly with Node (scripts/test-assemble.mts).
@@ -14,9 +14,10 @@ export interface Tables {
   resources: Row[]
   config: Row[]
   exams?: Row[]
+  announcements?: Row[]
 }
 
-export function assembleBundle({ series, serieSubjects, chapters, resources, config, exams = [] }: Tables, fallbackBacDate: string, examFileBase = ''): ContentBundle {
+export function assembleBundle({ series, serieSubjects, chapters, resources, config, exams = [], announcements = [] }: Tables, fallbackBacDate: string, examFileBase = ''): ContentBundle {
   const cfg = Object.fromEntries(config.map((r) => [r.key as string, r.value]))
   const bundle: ContentBundle = {
     version: Number(cfg.content_version ?? 1),
@@ -58,6 +59,20 @@ export function assembleBundle({ series, serieSubjects, chapters, resources, con
         url: r.file_path ? examFileBase + String(r.file_path) : String(r.url ?? ''),
       }))
       .filter((e) => /^https:\/\/[^\s]+$/i.test(e.url)),
+    announcements: announcements.map((r): AnnouncementDef => {
+      const version = (l: 'fr' | 'ar') => (r[`title_${l}`] ? { title: String(r[`title_${l}`]), body: (r[`body_${l}`] as string) || undefined } : undefined)
+      const link = String(r.link ?? '')
+      return {
+        id: Number(r.id),
+        serie: (r.serie_id as string) ?? null,
+        fr: version('fr'),
+        ar: version('ar'),
+        // Same rule as the database: an app page or an https website, nothing else.
+        link: /^(\/[a-z0-9/_-]*|https:\/\/[^\s]+)$/i.test(link) ? link : undefined,
+        startsAt: String(r.starts_at),
+        expiresAt: (r.expires_at as string) || undefined,
+      }
+    }),
   }
   for (const x of serieSubjects) {
     const serie = x.serie_id as string

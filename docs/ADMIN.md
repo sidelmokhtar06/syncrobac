@@ -68,6 +68,12 @@ laptop the sections are listed on the left; on a phone they scroll horizontally.
   (normale / complémentaire), sujet or corrigé. Upload a PDF (20 MB max) or paste an https link;
   hide, open or delete. Students find them in Ressources → the subject → *Sujets du BAC*, with a
   year filter.
+- **Annonces**: messages to students, for every série or one série. Write a French and/or an Arabic
+  version: each student gets the version of their app language (fill only one language to reach only
+  those students). Optional link (an app page like `/resources/maths`, or `https://…`) and end date.
+  Students see a new message as a card on Accueil and in the 🔔 inbox, the next time they open the
+  app (or come back to it after 30 min). Edit, hide or delete anytime. Push notifications (phone
+  closed) are a later step.
 - **Matières**: per série, change coefficients, programme status (officiel / provisoire /
   générique), order, add an existing or new subject, remove one.
   Each série can be **opened or closed** to students. SyncroBac launches with C and D open; TM,
@@ -98,6 +104,11 @@ Supabase → SQL Editor → run `supabase/exams.sql` (after `security.sql`). It 
 download without an account; only you (admin + two-factor) can upload or delete, and every change
 is in the journal. Until it is run, the Annales section says "Indisponible" and the app shows no
 papers (everything else keeps working).
+
+### Turning on Annonces (once)
+
+Supabase → SQL Editor → run `supabase/announcements.sql` (after `security.sql`). Until then the
+Annonces section says "Indisponible" and the app shows no messages (everything else keeps working).
 
 ## Advanced: Table Editor (like a spreadsheet)
 

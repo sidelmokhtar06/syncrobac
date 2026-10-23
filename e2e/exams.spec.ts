@@ -1,5 +1,6 @@
 import { expect, test, type Route } from '@playwright/test'
 import { readFileSync } from 'node:fs'
+import { createFakeServer, installFakeSupabase } from './fake-supabase'
 import { onboard, trackErrors } from './helpers'
 
 // Annales: the admin uploads a PDF, students find it under the subject and filter by year.
@@ -60,7 +61,8 @@ test('admin uploads a past paper as a PDF', async ({ page }) => {
   expect(errors).toEqual([])
 })
 
-test('students find past papers under the subject and filter them by year', async ({ page }) => {
+test('students find past papers under the subject and filter them by year', async ({ page, context }) => {
+  await installFakeSupabase(context, createFakeServer()) // never reach the real project
   const errors = trackErrors(page)
   await onboard(page) // série C
   // Content as downloaded from Supabase: 2024 (sujet + corrigé), 2023 complémentaire, one paper of another série.

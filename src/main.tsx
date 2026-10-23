@@ -5,6 +5,7 @@ import { LazyMotion, MotionConfig } from 'motion/react'
 import '@fontsource-variable/readex-pro'
 import './index.css'
 import './lib/pwa' // capture the install prompt before any page mounts
+import './lib/appUpdate' // look for a new version of the app, switch to it safely
 import App from './App.tsx'
 import { loadCachedContent, refreshContent, refreshContentIfStale } from './lib/contentSync'
 import { handleAuthRedirect } from './lib/auth'

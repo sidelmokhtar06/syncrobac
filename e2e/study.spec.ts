@@ -77,3 +77,20 @@ test('opening a chapter or the simulator writes nothing until the student edits'
   expect(await readTable(page, 'simulator')).toEqual([])
   expect(errors).toEqual([])
 })
+
+test('coffee page: the chosen amount follows the number, copy and share work', async ({ page, context }) => {
+  const errors = trackErrors(page)
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await onboard(page)
+  await page.goto('/coffee')
+  await expect(page.getByText('37 36 06 96')).toHaveCount(1) // one number for the three wallets
+  await page.getByRole('radio', { name: /200 MRU/ }).click()
+  await expect(page.getByText('Envoie 200 MRU au')).toBeVisible()
+  await page.getByRole('button', { name: /Copier 37 36 06 96/ }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('37360696')
+  await page.evaluate(() => Object.defineProperty(navigator, 'share', { value: undefined })) // no share sheet: the link is copied
+  await page.getByRole('button', { name: /Partager SyncroBac/ }).click()
+  await expect(page.getByText('Lien copié')).toBeVisible()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(new URL(page.url()).origin)
+  expect(errors).toEqual([])
+})

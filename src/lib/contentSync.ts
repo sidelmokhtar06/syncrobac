@@ -16,8 +16,16 @@ export async function loadCachedContent() {
   }
 }
 
+let lastRefresh = 0
+
+/** Coming back to the app: refresh if the last check is older than 30 minutes (new messages, papers…). */
+export function refreshContentIfStale() {
+  if (Date.now() - lastRefresh > 30 * 60_000) refreshContent()
+}
+
 export async function refreshContent() {
   if (!remoteConfigured || !navigator.onLine) return
+  lastRefresh = Date.now()
   try {
     const remote = await fetchRemoteContent()
     const cached = (await db.content.get('bundle'))?.bundle ?? DEFAULT_CONTENT

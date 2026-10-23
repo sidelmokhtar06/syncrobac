@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, m } from 'motion/react'
-import { ArrowDown, ArrowUp, Bug, ChartColumn, Check, CheckCheck, Copy, ExternalLink, Eye, EyeOff, FileText, History, KeyRound, Layers, Link2, ListOrdered, LogOut, MessageSquareText, Plus, RotateCcw, ShieldAlert, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Bug, ChartColumn, Check, CheckCheck, Copy, ExternalLink, Eye, EyeOff, FileText, History, Megaphone, KeyRound, Layers, Link2, ListOrdered, LogOut, MessageSquareText, Plus, RotateCcw, ShieldAlert, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { LogoMark } from '../components/Logo'
 import { EASE, Item, Stagger } from '../components/motion'
 import { Button, Chip, IconButton, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
@@ -15,7 +15,7 @@ import { refreshContent } from '../lib/contentSync'
 
 const IDLE_MS = 15 * 60_000
 
-type Tab = 'resources' | 'exams' | 'subjects' | 'chapters' | 'feedback' | 'stats' | 'general'
+type Tab = 'resources' | 'exams' | 'announcements' | 'subjects' | 'chapters' | 'feedback' | 'stats' | 'general'
 type Row = Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export default function Admin() {
@@ -145,6 +145,7 @@ function Panel({ tab, setTab, save, toast, onSignOut }: { tab: Tab; setTab: (t: 
         <div className="min-w-0">
           {tab === 'resources' && <ResourcesAdmin save={save} />}
           {tab === 'exams' && <ExamsAdmin save={save} />}
+          {tab === 'announcements' && <AnnouncementsAdmin save={save} />}
           {tab === 'subjects' && <SubjectsAdmin save={save} />}
           {tab === 'chapters' && <ChaptersAdmin save={save} />}
           {tab === 'feedback' && <FeedbackAdmin />}
@@ -176,6 +177,7 @@ type Save = (fn: () => Promise<unknown>) => Promise<boolean>
 const TABS: { value: Tab; label: string; Icon: typeof History }[] = [
   { value: 'resources', label: 'Ressources', Icon: Link2 },
   { value: 'exams', label: 'Annales', Icon: FileText },
+  { value: 'announcements', label: 'Annonces', Icon: Megaphone },
   { value: 'subjects', label: 'Matières', Icon: Layers },
   { value: 'chapters', label: 'Chapitres', Icon: ListOrdered },
   { value: 'feedback', label: 'Retours', Icon: MessageSquareText },
@@ -505,6 +507,153 @@ function ResourcesAdmin({ save }: { save: Save }) {
         ))}
         {rows?.length === 0 && <p className="p-4 text-sm text-ink-3">Aucune ressource.</p>}
       </div>
+    </div>
+  )
+}
+
+// ── Annonces (messages to students) ─────────────────────────────────────
+
+const EMPTY_ANN = { serie_id: '', title_fr: '', body_fr: '', title_ar: '', body_ar: '', link: '', expires: '', published: true }
+const LINK_RE = /^(\/[a-z0-9/_-]*|https:\/\/\S+)$/
+
+function annStatus(r: Row) {
+  const now = Date.now()
+  if (!r.published) return { label: 'Masquée', tone: 'neutral' as const }
+  if (Date.parse(r.starts_at) > now) return { label: 'Programmée', tone: 'warning' as const }
+  if (r.expires_at && Date.parse(r.expires_at) <= now) return { label: 'Expirée', tone: 'neutral' as const }
+  return { label: 'En ligne', tone: 'success' as const }
+}
+
+function AnnouncementsAdmin({ save }: { save: Save }) {
+  const { rows, error, reload } = useTable('announcements?select=*&order=starts_at.desc&limit=100')
+  const { rows: series } = useTable('series?select=id&order=position')
+  const [edit, setEdit] = useState<(typeof EMPTY_ANN & { id?: number }) | null>(null)
+
+  const hasFr = !!edit?.title_fr.trim()
+  const hasAr = !!edit?.title_ar.trim()
+  const valid =
+    !!edit &&
+    (hasFr || hasAr) &&
+    [edit.title_fr, edit.title_ar].every((x) => !x.trim() || x.trim().length >= 2) &&
+    (!edit.link.trim() || LINK_RE.test(edit.link.trim())) &&
+    (!edit.expires || Date.parse(`${edit.expires}T23:59:59`) > Date.now())
+
+  const submit = async () => {
+    if (!edit) return
+    const text = (x: string) => x.trim() || null
+    const body = {
+      serie_id: edit.serie_id || null,
+      title_fr: text(edit.title_fr),
+      body_fr: hasFr ? text(edit.body_fr) : null,
+      title_ar: text(edit.title_ar),
+      body_ar: hasAr ? text(edit.body_ar) : null,
+      link: text(edit.link),
+      expires_at: edit.expires ? new Date(`${edit.expires}T23:59:59`).toISOString() : null,
+      published: edit.published,
+    }
+    const ok = await save(() =>
+      edit.id
+        ? api(`announcements?id=eq.${edit.id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify(body) })
+        : api('announcements', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(body) }),
+    )
+    if (ok) {
+      setEdit(null)
+      reload()
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <SectionTitle action={<Button onClick={() => setEdit({ ...EMPTY_ANN })}><Plus size={16} /> Nouvelle</Button>}>
+        Annonces <span className="tnum text-ink-3">· {rows?.length ?? '…'}</span>
+      </SectionTitle>
+      {error && <p className="card p-4 text-xs text-ink-3">Indisponible ({error}). Exécute supabase/announcements.sql dans Supabase → SQL Editor.</p>}
+
+      <AnimatePresence initial={false}>
+        {edit && (
+          <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
+            <div className="card flex flex-col gap-3 p-4">
+              <Field label="Destinataires">
+                <Select value={edit.serie_id} onChange={(e) => setEdit({ ...edit, serie_id: e.target.value })}>
+                  <option value="">Toutes les séries</option>
+                  {SERIE_OPTIONS(series).map((o) => <option key={o.value} value={o.value}>Série {o.label}</option>)}
+                </Select>
+              </Field>
+              <p className="text-xs text-ink-3">
+                Chaque élève reçoit la version de sa langue. Remplis seulement le français (ou l’arabe) pour n’écrire qu’aux élèves qui utilisent l’app dans cette langue.
+              </p>
+              <Field label="Titre (FR)"><input className={inputClass} maxLength={80} value={edit.title_fr} onChange={(e) => setEdit({ ...edit, title_fr: e.target.value })} /></Field>
+              {hasFr && <Field label={`Texte (FR) · ${edit.body_fr.length}/500`}><textarea rows={3} maxLength={500} className={cn(inputClass, 'h-auto py-2')} value={edit.body_fr} onChange={(e) => setEdit({ ...edit, body_fr: e.target.value })} /></Field>}
+              <Field label="العنوان (AR)"><input className={inputClass} dir="rtl" lang="ar" maxLength={80} value={edit.title_ar} onChange={(e) => setEdit({ ...edit, title_ar: e.target.value })} /></Field>
+              {hasAr && <Field label={`النص (AR) · ${edit.body_ar.length}/500`}><textarea rows={3} dir="rtl" lang="ar" maxLength={500} className={cn(inputClass, 'h-auto py-2')} value={edit.body_ar} onChange={(e) => setEdit({ ...edit, body_ar: e.target.value })} /></Field>}
+              <Field label="Lien (facultatif) : une page de l’app (/resources/maths) ou un site (https://…)">
+                <input className={inputClass} dir="ltr" value={edit.link} onChange={(e) => setEdit({ ...edit, link: e.target.value })} placeholder="/resources/maths" />
+              </Field>
+              {edit.link.trim() && !LINK_RE.test(edit.link.trim()) && <p className="text-sm text-danger">Lien invalide : commence par / (page de l’app) ou https://</p>}
+              <Field label="Visible jusqu’au (facultatif)"><input type="date" className={inputClass} value={edit.expires} onChange={(e) => setEdit({ ...edit, expires: e.target.value })} /></Field>
+              <label className="flex min-h-11 items-center gap-3 text-sm">
+                <input type="checkbox" checked={edit.published} onChange={(e) => setEdit({ ...edit, published: e.target.checked })} className="size-5 accent-accent" />
+                Publiée (visible par les élèves)
+              </label>
+              <div className="flex gap-2">
+                <Button variant="secondary" className="flex-1" onClick={() => setEdit(null)}>Annuler</Button>
+                <Button className="flex-1" disabled={!valid} onClick={submit}>{edit.id ? 'Enregistrer' : 'Envoyer'}</Button>
+              </div>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
+
+      <div className="card divide-y divide-line">
+        {rows?.map((r) => {
+          const st = annStatus(r)
+          return (
+            <div key={r.id} className="flex min-h-15 items-center gap-2 px-3 py-2">
+              <button
+                className="min-w-0 flex-1 text-start"
+                onClick={() =>
+                  setEdit({
+                    id: r.id,
+                    serie_id: r.serie_id ?? '',
+                    title_fr: r.title_fr ?? '',
+                    body_fr: r.body_fr ?? '',
+                    title_ar: r.title_ar ?? '',
+                    body_ar: r.body_ar ?? '',
+                    link: r.link ?? '',
+                    expires: r.expires_at ? new Date(r.expires_at).toISOString().slice(0, 10) : '',
+                    published: r.published,
+                  })
+                }
+              >
+                <span className="block truncate text-sm font-medium">{r.title_fr ?? r.title_ar}</span>
+                <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <Chip tone={st.tone}>{st.label}</Chip>
+                  <Chip tone={r.serie_id ? 'accent' : 'neutral'}>{r.serie_id ? `Série ${r.serie_id}` : 'Toutes'}</Chip>
+                  {r.title_fr && <Chip>FR</Chip>}
+                  {r.title_ar && <Chip>AR</Chip>}
+                  <span className="text-xs text-ink-3">{new Date(r.starts_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                </span>
+              </button>
+              <IconButton
+                label={r.published ? 'Masquer' : 'Publier'}
+                className="size-11"
+                onClick={() => save(() => api(`announcements?id=eq.${r.id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ published: !r.published }) })).then(reload)}
+              >
+                {r.published ? <Eye size={16} /> : <EyeOff size={16} />}
+              </IconButton>
+              <button
+                aria-label="Supprimer"
+                className="grid size-11 place-items-center text-ink-3 hover:text-danger"
+                onClick={async () => confirm(`Supprimer « ${r.title_fr ?? r.title_ar} » ?`) && (await save(() => api(`announcements?id=eq.${r.id}`, { method: 'DELETE', prefer: 'return=minimal' }))) && reload()}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          )
+        })}
+        {rows?.length === 0 && <p className="p-4 text-sm text-ink-3">Aucune annonce. Écris la première avec « Nouvelle ».</p>}
+      </div>
+      <p className="text-xs text-ink-3">Les élèves la voient en ouvrant l’app (carte sur l’Accueil + cloche). Les notifications push viendront plus tard.</p>
     </div>
   )
 }
@@ -1061,7 +1210,7 @@ function TableMissing({ error }: { error: string }) {
 const FEATURE_LABEL: Record<string, string> = {
   open: 'Ouvre l’app', home: 'Accueil', plan: 'Plan', subjects: 'Matières', subject: 'Page matière', chapter: 'Page chapitre',
   focus: 'Focus', focus_done: 'Session terminée', history: 'Historique', resources: 'Ressources', me: 'Profil', progress: 'Progrès',
-  simulator: 'Simulateur', settings: 'Réglages', coffee: 'Page café', mistakes: 'Carnet d’erreurs', account: 'Compte', feedback: 'Avis envoyé',
+  simulator: 'Simulateur', settings: 'Réglages', coffee: 'Page café', mistakes: 'Carnet d’erreurs', account: 'Compte', feedback: 'Avis envoyé', coffee_sent: 'Café envoyé', share_app: 'App partagée', messages: 'Annonces',
 }
 
 function StatsAdmin() {

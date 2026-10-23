@@ -60,6 +60,17 @@ export interface ExamDef {
   url: string
 }
 
+// A message from the admin (announcements table). Shown in the student's language only.
+export interface AnnouncementDef {
+  id: number
+  serie: string | null // null = every série
+  fr?: { title: string; body?: string }
+  ar?: { title: string; body?: string }
+  link?: string // a page of the app ("/resources/maths") or a website
+  startsAt: string
+  expiresAt?: string
+}
+
 export interface ContentBundle {
   version: number
   updatedAt: string
@@ -68,6 +79,7 @@ export interface ContentBundle {
   programme: Record<string, Record<string, SubjectProgramme>>
   links: LinkDef[]
   exams?: ExamDef[] // absent in bundles cached before annales existed
+  announcements?: AnnouncementDef[]
 }
 
 export const DEFAULT_CONTENT = defaults as ContentBundle
@@ -104,7 +116,7 @@ async function get<T>(path: string): Promise<T> {
 /** Fetches the tables and assembles a bundle. Throws if anything looks wrong (we then keep the cache). */
 export async function fetchRemoteContent(): Promise<ContentBundle> {
   if (!remoteConfigured) throw new Error('Supabase not configured')
-  const [series, serieSubjects, chapters, resources, config, exams] = await Promise.all([
+  const [series, serieSubjects, chapters, resources, config, exams, announcements] = await Promise.all([
     get<Row[]>('series?select=*&order=position'), // closed séries too: their students are asked to switch
     get<Row[]>('serie_subjects?select=*,subjects(*)&order=position'),
     get<Row[]>('chapters?select=*&order=position'),
@@ -112,6 +124,8 @@ export async function fetchRemoteContent(): Promise<ContentBundle> {
     get<Row[]>('app_config?select=*'),
     // Optional: before supabase/exams.sql is run the table doesn't exist, and the rest still loads.
     get<Row[]>('exam_papers?select=*&published=eq.true&order=year.desc,session,kind').catch(() => []),
+    // Live messages only (dates are checked by the database). Optional like exam papers.
+    get<Row[]>('announcements?select=*&published=eq.true&order=starts_at.desc&limit=50').catch(() => []),
   ])
-  return assembleBundle({ series, serieSubjects, chapters, resources, config, exams }, DEFAULT_CONTENT.bacDate, examFileBase)
+  return assembleBundle({ series, serieSubjects, chapters, resources, config, exams, announcements }, DEFAULT_CONTENT.bacDate, examFileBase)
 }

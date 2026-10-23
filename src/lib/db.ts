@@ -26,6 +26,7 @@ export interface Settings {
   weeklyGoal: number // active days per week (gentle streak)
   name: string
   dismissed: string[] // one-time cards the student closed (e.g. 'install')
+  readAnnouncements?: number[] // admin messages already seen on this phone
   extensions: Record<string, boolean>
 }
 

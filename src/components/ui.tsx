@@ -55,13 +55,14 @@ export function IconButton({ label, className, children, ...p }: HTMLMotionProps
 // ── Segmented control ───────────────────────────────────────────────────
 
 export function Segmented<T extends string>({
-  value, options, onChange, id, disabled,
+  value, options, onChange, id, disabled, iconOnly,
 }: {
   value: T
   options: { value: T; label: string; icon?: ReactNode; dot?: string }[]
   onChange: (v: T) => void
   id: string // unique layoutId for the sliding thumb
   disabled?: boolean
+  iconOnly?: boolean // compact: icons only, the label stays as the accessible name + tooltip
 }) {
   return (
     <div role="radiogroup" className={cn('flex rounded-xl bg-raised p-1', disabled && 'opacity-50')}>
@@ -72,6 +73,8 @@ export function Segmented<T extends string>({
             key={o.value}
             role="radio"
             aria-checked={on}
+            aria-label={iconOnly ? o.label : undefined}
+            title={iconOnly ? o.label : undefined}
             disabled={disabled}
             onClick={() => onChange(o.value)}
             className={cn('relative flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-sm transition-colors', on ? 'text-ink' : 'text-ink-2')}
@@ -80,7 +83,7 @@ export function Segmented<T extends string>({
             <span className="relative flex items-center gap-1.5 whitespace-nowrap">
               {o.dot && <span className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: o.dot }} />}
               {o.icon}
-              {o.label}
+              {!iconOnly && o.label}
             </span>
           </button>
         )

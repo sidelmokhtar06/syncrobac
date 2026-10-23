@@ -9,6 +9,7 @@ import { AddLinkForm } from '../components/AddLinkForm'
 import { SearchBar } from '../components/SearchBar'
 import { Button, Chip, PageHeader, SectionTitle } from '../components/ui'
 import { suggestedLinks } from '../config/links'
+import { examsFor, groupExams } from '../config/exams'
 import { cn } from '../lib/cn'
 import { db, subjectsFor, useSettings } from '../lib/db'
 import { useT } from '../lib/i18n'
@@ -181,6 +182,7 @@ export default function Resources() {
             <div className="grid gap-2.5 sm:grid-cols-2">
               {subjects.map((sub) => {
                 const count = subjectCounts.get(sub.id) ?? 0
+                const examCount = groupExams(examsFor(s.serie, sub.id)).length
                 const major = sub.coeff >= topCoeff
                 return (
                   <Link
@@ -203,8 +205,9 @@ export default function Resources() {
                         </h3>
                         <p className="text-xs text-ink-3">
                           {count > 0
-                            ? `${count} ${count > 1 ? t('resourcesCount') : 'ressource'}`
+                            ? `${count} ${count > 1 ? t('resourcesCount') : t('resourceOne')}`
                             : t('noLinks')}
+                          {examCount > 0 && ` · ${examCount} ${t('examsCount')}`}
                         </p>
                       </div>
                     </div>

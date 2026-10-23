@@ -6,9 +6,11 @@ import { BookOpen, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { EASE, Item, Stagger } from '../components/motion'
 import { ResourceCard, domain, type ResourceItem } from '../components/ResourceCard'
 import { AddLinkForm } from '../components/AddLinkForm'
+import { ExamPapers } from '../components/ExamPapers'
 import { SearchBar } from '../components/SearchBar'
 import { Button, Chip, PageHeader, SectionTitle, Segmented } from '../components/ui'
 import { suggestedLinks } from '../config/links'
+import { examsFor } from '../config/exams'
 import { db, subjectsFor, useSettings, type SavedLink } from '../lib/db'
 import { useT, type TKey } from '../lib/i18n'
 
@@ -31,6 +33,7 @@ export default function SubjectResources() {
   const [editing, setEditing] = useState<ResourceItem | null>(null)
 
   const subject = subjectsFor(s).find((x) => x.id === subjectId)
+  const exams = examsFor(s.serie, subjectId)
   const rtl = lang === 'ar'
   const Chevron = rtl ? ChevronLeft : ChevronRight
 
@@ -142,6 +145,13 @@ export default function SubjectResources() {
           <Chevron size={18} className="text-ink-3" />
         </Link>
       </Item>
+
+      {/* Past BAC papers */}
+      {exams.length > 0 && (
+        <Item>
+          <ExamPapers exams={exams} />
+        </Item>
+      )}
 
       {/* Search Bar */}
       <Item>

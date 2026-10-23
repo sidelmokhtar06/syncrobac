@@ -64,6 +64,10 @@ Open **https://syncrobac.vercel.app/admin** and sign in (password + authenticato
 laptop the sections are listed on the left; on a phone they scroll horizontally. Sections:
 
 - **Ressources**: add / edit / hide / delete recommended links, optionally for one série.
+- **Annales**: past BAC papers per subject (and per série, or for all séries): year, session
+  (normale / complémentaire), sujet or corrigé. Upload a PDF (20 MB max) or paste an https link;
+  hide, open or delete. Students find them in Ressources → the subject → *Sujets du BAC*, with a
+  year filter.
 - **Matières**: per série, change coefficients, programme status (officiel / provisoire /
   générique), order, add an existing or new subject, remove one.
 - **Chapitres**: per série + subject, rename (FR/AR), set official weeks, reorder, add, delete.
@@ -83,6 +87,14 @@ Every save is published immediately (content version is bumped automatically).
 Supabase → SQL Editor → run `supabase/insights.sql`. Until then those two sections say
 "Indisponible". Anyone can send feedback or crash reports, only you (admin + two-factor) can read
 them; a flood guard caps inserts per hour, and crash reports are dropped after 90 days.
+
+### Turning on Annales (once)
+
+Supabase → SQL Editor → run `supabase/exams.sql` (after `security.sql`). It creates the
+`exam_papers` table and the public `exam-papers` storage bucket (PDF only, 20 MB max). Students
+download without an account; only you (admin + two-factor) can upload or delete, and every change
+is in the journal. Until it is run, the Annales section says "Indisponible" and the app shows no
+papers (everything else keeps working).
 
 ## Advanced: Table Editor (like a spreadsheet)
 

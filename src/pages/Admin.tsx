@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, m } from 'motion/react'
-import { ArrowDown, ArrowUp, Bug, ChartColumn, Check, CheckCheck, Copy, ExternalLink, Eye, EyeOff, History, KeyRound, Layers, Link2, ListOrdered, LogOut, MessageSquareText, Plus, RotateCcw, ShieldAlert, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Bug, ChartColumn, Check, CheckCheck, Copy, ExternalLink, Eye, EyeOff, FileText, History, KeyRound, Layers, Link2, ListOrdered, LogOut, MessageSquareText, Plus, RotateCcw, ShieldAlert, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { LogoMark } from '../components/Logo'
 import { EASE, Item, Stagger } from '../components/motion'
 import { Button, Chip, IconButton, PageHeader, SectionTitle, Segmented, Select, inputClass } from '../components/ui'
-import { aal, adminConfigured, api, currentEmail, enrollTotp, isAdmin, publish, signIn, signOut, slugKey, verifiedTotp, verifyTotp } from '../lib/admin'
+import { EXAM_MAX_BYTES, aal, adminConfigured, api, currentEmail, deleteExamFile, enrollTotp, isAdmin, publish, signIn, signOut, slugKey, uploadExamFile, verifiedTotp, verifyTotp } from '../lib/admin'
+import { examFileBase } from '../config/content'
 import { cn } from '../lib/cn'
 import { refreshContent } from '../lib/contentSync'
 
@@ -14,7 +15,7 @@ import { refreshContent } from '../lib/contentSync'
 
 const IDLE_MS = 15 * 60_000
 
-type Tab = 'resources' | 'subjects' | 'chapters' | 'feedback' | 'stats' | 'general'
+type Tab = 'resources' | 'exams' | 'subjects' | 'chapters' | 'feedback' | 'stats' | 'general'
 type Row = Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export default function Admin() {
@@ -143,6 +144,7 @@ function Panel({ tab, setTab, save, toast, onSignOut }: { tab: Tab; setTab: (t: 
         </nav>
         <div className="min-w-0">
           {tab === 'resources' && <ResourcesAdmin save={save} />}
+          {tab === 'exams' && <ExamsAdmin save={save} />}
           {tab === 'subjects' && <SubjectsAdmin save={save} />}
           {tab === 'chapters' && <ChaptersAdmin save={save} />}
           {tab === 'feedback' && <FeedbackAdmin />}
@@ -173,6 +175,7 @@ type Save = (fn: () => Promise<unknown>) => Promise<boolean>
 
 const TABS: { value: Tab; label: string; Icon: typeof History }[] = [
   { value: 'resources', label: 'Ressources', Icon: Link2 },
+  { value: 'exams', label: 'Annales', Icon: FileText },
   { value: 'subjects', label: 'Matières', Icon: Layers },
   { value: 'chapters', label: 'Chapitres', Icon: ListOrdered },
   { value: 'feedback', label: 'Retours', Icon: MessageSquareText },
@@ -501,6 +504,155 @@ function ResourcesAdmin({ save }: { save: Save }) {
           </div>
         ))}
         {rows?.length === 0 && <p className="p-4 text-sm text-ink-3">Aucune ressource.</p>}
+      </div>
+    </div>
+  )
+}
+
+// ── Annales (past BAC papers) ───────────────────────────────────────────
+
+const EMPTY_EXAM = { year: new Date().getFullYear(), session: 'normale', kind: 'subject', source: 'file' as 'file' | 'url', url: 'https://', title: '', published: true }
+const examHref = (r: Row) => (r.file_path ? examFileBase + r.file_path : r.url)
+
+function ExamsAdmin({ save }: { save: Save }) {
+  const { rows: series } = useTable('series?select=id&order=position')
+  const { rows: subjects } = useTable('subjects?select=id,name_fr&order=name_fr')
+  const [serie, setSerie] = useState('') // '' = every série
+  const [subject, setSubject] = useState('')
+  useEffect(() => void (subjects?.length && !subject && setSubject(subjects[0].id)), [subjects, subject])
+  const { rows, error, reload } = useTable(subject ? `exam_papers?subject_id=eq.${subject}&select=*&order=year.desc,session,kind` : null)
+  const [edit, setEdit] = useState<typeof EMPTY_EXAM | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [busy, setBusy] = useState(false)
+  const shown = (rows ?? []).filter((r) => !serie || !r.serie_id || r.serie_id === serie)
+
+  const submit = async () => {
+    if (!edit) return
+    setBusy(true)
+    const ok = await save(async () => {
+      const base = { serie_id: serie || null, subject_id: subject, year: edit.year, session: edit.session, kind: edit.kind, title: edit.title.trim() || null, published: edit.published }
+      if (edit.source === 'url') return api('exam_papers', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ ...base, url: edit.url.trim() }) })
+      const path = `${(serie || 'all').toLowerCase()}/${subject}/${edit.year}-${edit.session}-${edit.kind}-${Math.random().toString(36).slice(2, 8)}.pdf`
+      await uploadExamFile(path, file!)
+      try {
+        await api('exam_papers', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ ...base, file_path: path }) })
+      } catch (e) {
+        await deleteExamFile(path).catch(() => {}) // don't leave an orphan file behind
+        throw e
+      }
+    })
+    setBusy(false)
+    if (ok) {
+      setEdit(null)
+      setFile(null)
+      reload()
+    }
+  }
+
+  const remove = async (r: Row) => {
+    if (!confirm(`Supprimer ${r.kind === 'solution' ? 'le corrigé' : 'le sujet'} ${r.year} ?`)) return
+    const ok = await save(async () => {
+      await api(`exam_papers?id=eq.${r.id}`, { method: 'DELETE', prefer: 'return=minimal' })
+      if (r.file_path) await deleteExamFile(r.file_path)
+    })
+    if (ok) reload()
+  }
+
+  const valid = !!edit && edit.year >= 1990 && edit.year <= 2100 && (edit.source === 'file' ? !!file : /^https:\/\/\S+\.\S+/.test(edit.url))
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Série">
+          <Select value={serie} onChange={(e) => setSerie(e.target.value)}>
+            <option value="">Toutes</option>
+            {SERIE_OPTIONS(series).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </Select>
+        </Field>
+        <Field label="Matière">
+          <Select value={subject} onChange={(e) => setSubject(e.target.value)}>
+            {(subjects ?? []).map((s) => <option key={s.id} value={s.id}>{s.name_fr}</option>)}
+          </Select>
+        </Field>
+      </div>
+
+      <SectionTitle action={<Button disabled={!subject} onClick={() => setEdit({ ...EMPTY_EXAM })}><Plus size={16} /> Ajouter</Button>}>
+        Annales <span className="tnum text-ink-3">· {rows ? shown.length : '…'}</span>
+      </SectionTitle>
+      {error && <p className="card p-4 text-xs text-ink-3">Indisponible ({error}). Exécute supabase/exams.sql dans Supabase → SQL Editor.</p>}
+
+      <AnimatePresence initial={false}>
+        {edit && (
+          <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
+            <div className="card flex flex-col gap-3 p-4">
+              <p className="text-sm text-ink-2">
+                {subjects?.find((s) => s.id === subject)?.name_fr} · {serie ? `série ${serie}` : 'toutes les séries'}
+              </p>
+              <div className="grid grid-cols-[5.5rem_1fr_1fr] gap-3">
+                <Field label="Année"><input type="number" min={1990} max={2100} className={cn(inputClass, 'tnum')} value={edit.year} onChange={(e) => setEdit({ ...edit, year: +e.target.value })} /></Field>
+                <Field label="Session">
+                  <Select value={edit.session} onChange={(e) => setEdit({ ...edit, session: e.target.value })}>
+                    <option value="normale">Normale</option>
+                    <option value="complementaire">Complémentaire</option>
+                  </Select>
+                </Field>
+                <Field label="Document">
+                  <Select value={edit.kind} onChange={(e) => setEdit({ ...edit, kind: e.target.value })}>
+                    <option value="subject">Sujet</option>
+                    <option value="solution">Corrigé</option>
+                  </Select>
+                </Field>
+              </div>
+              <Segmented<'file' | 'url'> id="exam-source" value={edit.source} onChange={(v) => setEdit({ ...edit, source: v })} options={[{ value: 'file', label: 'Fichier PDF' }, { value: 'url', label: 'Lien' }]} />
+              {edit.source === 'file' ? (
+                <Field label={`Fichier PDF (${EXAM_MAX_BYTES / 1024 / 1024} Mo max.)`}>
+                  <input type="file" accept="application/pdf" className={cn(inputClass, 'py-2')} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+                </Field>
+              ) : (
+                <Field label="Lien vers le PDF (https://)"><input className={inputClass} dir="ltr" inputMode="url" value={edit.url} onChange={(e) => setEdit({ ...edit, url: e.target.value })} /></Field>
+              )}
+              {file && file.size > EXAM_MAX_BYTES && <p className="text-sm text-danger">Fichier trop lourd ({(file.size / 1024 / 1024).toFixed(1)} Mo).</p>}
+              <Field label="Titre (facultatif, remplace « Sujet » / « Corrigé »)"><input className={inputClass} maxLength={120} value={edit.title} onChange={(e) => setEdit({ ...edit, title: e.target.value })} /></Field>
+              <label className="flex min-h-11 items-center gap-3 text-sm">
+                <input type="checkbox" checked={edit.published} onChange={(e) => setEdit({ ...edit, published: e.target.checked })} className="size-5 accent-accent" />
+                Publié (visible par les élèves)
+              </label>
+              <div className="flex gap-2">
+                <Button variant="secondary" className="flex-1" onClick={() => (setEdit(null), setFile(null))}>Annuler</Button>
+                <Button className="flex-1" disabled={!valid || busy || (!!file && file.size > EXAM_MAX_BYTES)} onClick={submit}>{busy ? 'Envoi…' : 'Enregistrer'}</Button>
+              </div>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
+
+      <div className="card divide-y divide-line">
+        {shown.map((r) => (
+          <div key={r.id} className="flex min-h-15 items-center gap-2 px-3 py-2">
+            <div className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className={cn('tnum text-sm font-medium', !r.published && 'text-ink-3 line-through')}>
+                  {r.year} · {r.kind === 'solution' ? 'Corrigé' : 'Sujet'}
+                </span>
+                {r.session === 'complementaire' && <Chip>Complémentaire</Chip>}
+                <Chip tone={r.serie_id ? 'accent' : 'neutral'}>{r.serie_id ?? 'Toutes'}</Chip>
+              </span>
+              <span className="block truncate text-xs text-ink-3" dir="ltr">{r.title || (r.file_path ? 'PDF importé' : r.url)}</span>
+            </div>
+            <IconButton
+              label={r.published ? 'Masquer' : 'Publier'}
+              className="size-11"
+              onClick={() => save(() => api(`exam_papers?id=eq.${r.id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ published: !r.published }) })).then(reload)}
+            >
+              {r.published ? <Eye size={16} /> : <EyeOff size={16} />}
+            </IconButton>
+            <a href={examHref(r)} target="_blank" rel="noopener noreferrer" aria-label="Ouvrir" className="grid size-11 place-items-center text-ink-3"><ExternalLink size={16} /></a>
+            <button aria-label="Supprimer" className="grid size-11 place-items-center text-ink-3 hover:text-danger" onClick={() => remove(r)}>
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ))}
+        {rows && shown.length === 0 && <p className="p-4 text-sm text-ink-3">Aucun sujet pour cette matière.</p>}
       </div>
     </div>
   )

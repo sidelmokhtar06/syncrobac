@@ -1061,7 +1061,7 @@ function TableMissing({ error }: { error: string }) {
 const FEATURE_LABEL: Record<string, string> = {
   open: 'Ouvre l’app', home: 'Accueil', plan: 'Plan', subjects: 'Matières', subject: 'Page matière', chapter: 'Page chapitre',
   focus: 'Focus', focus_done: 'Session terminée', history: 'Historique', resources: 'Ressources', me: 'Profil', progress: 'Progrès',
-  simulator: 'Simulateur', settings: 'Réglages', coffee: 'Page café', mistakes: 'Carnet d’erreurs', account: 'Compte', feedback: 'Avis envoyé',
+  simulator: 'Simulateur', settings: 'Réglages', coffee: 'Page café', mistakes: 'Carnet d’erreurs', account: 'Compte', feedback: 'Avis envoyé', coffee_sent: 'Café envoyé', share_app: 'App partagée',
 }
 
 function StatsAdmin() {

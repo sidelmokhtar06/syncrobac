@@ -86,15 +86,16 @@ export default function Settings() {
             </div>
           </Row>
           <Row label={t('theme')}>
-            <div className="w-56">
+            <div className="w-40">
               <Segmented<'system' | 'light' | 'dark'>
                 id="theme"
+                iconOnly
                 value={s.theme}
                 onChange={(v) => updateSettings({ theme: v })}
                 options={[
-                  { value: 'system', label: t('themeAuto'), icon: <Monitor size={14} />, dot: '#A3ADBB' },
-                  { value: 'light', label: t('themeLight'), icon: <Sun size={14} />, dot: '#F59E0B' },
-                  { value: 'dark', label: t('themeDark'), icon: <Moon size={14} />, dot: '#6366F1' },
+                  { value: 'system', label: t('themeAuto'), icon: <Monitor size={18} /> },
+                  { value: 'light', label: t('themeLight'), icon: <Sun size={18} /> },
+                  { value: 'dark', label: t('themeDark'), icon: <Moon size={18} /> },
                 ]}
               />
             </div>
